@@ -1,0 +1,96 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MockDataGenerator.ViewModels"
+        xmlns:controls="using:MockDataGenerator.Controls"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="using:MockDataGenerator.Models"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="MockDataGenerator.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="MockDataGenerator">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto, *, *, Auto, Auto" ColumnDefinitions="*, 3*"
+          RowSpacing="3" ColumnSpacing="5">
+        <!-- Верхняя панель -->
+		<DockPanel HorizontalSpacing="5">
+            <TextBlock VerticalAlignment="Center" Text="Формат:"/>
+            <ComboBox VerticalAlignment="Center" PlaceholderText="Тип файла"
+                      ItemsSource="{Binding Formats}"
+                      SelectedItem="{Binding GenerationOptions.Format}">
+            </ComboBox>
+        </DockPanel>
+		<controls:SQLFileSettings Grid.Column="1" IsVisible="False"/>
+        <controls:TextFileSettings Grid.Column="1"/>
+        <!-- Список -->
+
+        <Grid Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="2"
+              RowDefinitions="Auto, Auto, *" RowSpacing="3">
+			<TextBlock Text="Поля таблицы" FontWeight="Bold" FontSize="20"/>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5">
+				<Button Content="+" Width="25"/>
+                <Button Content="📄+"/>
+            </StackPanel>
+            <ListBox Grid.Row="2"
+                     ItemsSource="{Binding Fields}"
+                     Padding="0">
+				<ListBox.ItemTemplate>
+					<DataTemplate DataType="models:Field">
+                        <Grid ColumnDefinitions="1.5*, *, 120, Auto, Auto">
+							<TextBox Watermark="Введите название..."
+                                     VerticalContentAlignment="Center"
+                                     Text="{Binding Name}"/> <!--Привязать сюда имя предмета--> 
+                            <TextBox Watermark="Выберите тип..." 
+                                     IsReadOnly="True"
+                                     VerticalContentAlignment="Center"
+                                     Grid.Column="1"
+                                     Text="{Binding OutputValueType.DisplayName}"> <!--Привязать сюда тип предмета-->
+								<TextBox.InnerRightContent>
+									<Button Content="..."/>
+                                </TextBox.InnerRightContent>
+                            </TextBox>
+                            <NumericUpDown Watermark="% пустых" 
+                                           Minimum="0" 
+                                           Increment="1"
+                                           Grid.Column="2"
+                                           Value="{Binding Blank}"/>
+                            <Button Content="x"
+                                    Grid.Column="3"/>
+                            <Button Content="..."
+                                    Grid.Column="4"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+        <!-- Нижняя панель -->
+        <DockPanel Grid.Row="3">
+			<TextBlock Text="Количество записей: " VerticalAlignment="Center"/>
+            <NumericUpDown Increment="1" Minimum="1" Value="{Binding RecordCount}"/>
+        </DockPanel>
+        <DockPanel Grid.Row="3" Grid.Column="1" HorizontalSpacing="5" Margin="0,0,5,0">
+	        <Button Content="Менеджер компонентов" Command="{Binding OpenComponentManager}"/>
+            <Button Content="Сгенерировать"/>
+        </DockPanel>
+        <DockPanel Grid.Row="4" Grid.ColumnSpan="2" HorizontalSpacing="5">
+            <TextBlock Text="Статус: "/>
+            <TextBlock Text="В разработке..."/>
+            <Separator/>
+            <TextBlock Text="Процесс:"/>
+            <ProgressBar Grid.Row="4" 
+                     BorderBrush="Black" 
+                     BorderThickness="1"
+                     CornerRadius="3"
+                     Margin="0,0,5,0"/>
+        </DockPanel>
+        
+    </Grid>
+
+</Window>

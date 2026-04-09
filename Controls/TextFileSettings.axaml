@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewmodels="using:MockDataGenerator.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="100"
+             x:Class="MockDataGenerator.Controls.TextFileSettings"
+             x:DataType="viewmodels:MainWindowViewModel">
+  <Grid ColumnDefinitions="Auto, Auto, Auto" RowDefinitions="Auto" ColumnSpacing="5">
+      <StackPanel Orientation="Horizontal" >
+		  <TextBlock VerticalAlignment="Center" Text="Разделитель: "/>
+          <TextBox MaxLength="1" MinWidth="20"
+                   Text="{Binding GenerationOptions.Separator}"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" Grid.Column="1">
+		  <TextBlock VerticalAlignment="Center" Text="Кодировка: "/>
+          <ComboBox MinWidth="100"
+                    ItemsSource="{Binding Encodings}"
+                    SelectedItem="{Binding GenerationOptions.Encoding}"/>
+      </StackPanel>
+  </Grid>
+</UserControl>

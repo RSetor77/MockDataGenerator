@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MockDataGenerator.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="using:MockDataGenerator.Models"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="MockDataGenerator.ComponentManager"
+        Title="ComponentManager"
+        x:DataType="vm:ComponentManagerViewModel">
+  <Grid RowDefinitions="Auto, *, Auto">
+      <Grid ColumnDefinitions="*, Auto">
+		  <TextBox Watermark="Поиск"/>
+          <Button Grid.Column="1" Content="Найти"/>
+      </Grid>
+      <ListBox Grid.Row="1"
+               ItemsSource="{Binding OutputValueTypeHeaders}"
+               SelectionMode="Multiple"
+               SelectedItems="{Binding SelectedOutputValueTypes}"> <!--Список компонентов-->
+		  <ListBox.ItemTemplate>
+					<DataTemplate DataType="models:OutputValueTypeHeader">
+                        <Grid ColumnDefinitions="Auto, 2*, *">
+                            <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}"
+                                      Margin="5,0"/>
+                            <TextBlock Text="{Binding DisplayName}"
+                                       Grid.Column="1"/> <!--Имя компонента-->
+                            <TextBlock Text="{Binding Type}"
+                                       Grid.Column="2"/> <!--Тип компонента [СУБД | Тип значения]-->
+                        </Grid>
+                    </DataTemplate>
+          </ListBox.ItemTemplate>
+      </ListBox>
+	  <Grid Grid.Row="2"
+            ColumnDefinitions="Auto, Auto, *">
+		  <Button Content="Синхронизировать" Command="{Binding Test}"/>
+          <Button Grid.Column="1" Content="Открыть в проводнике"/>
+          <Button Grid.Column="2" Content="Применить" HorizontalAlignment="Right"/>
+      </Grid>
+  </Grid>
+</Window>
