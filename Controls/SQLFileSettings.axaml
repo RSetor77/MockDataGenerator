@@ -10,7 +10,7 @@
 	  <StackPanel Orientation="Horizontal">
 		  <TextBlock VerticalAlignment="Center" Text="СУБД: "/>
           <ComboBox MinWidth="100"
-                    ItemsSource="{Binding ListDBMS}"
+                    ItemsSource="{Binding ComponentItems.DBMSRules}"
                     SelectedItem="{Binding GenerationOptions.DBMS}"/>
       </StackPanel>
       <StackPanel Orientation="Horizontal" Grid.Column="1">

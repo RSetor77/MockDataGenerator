@@ -77,7 +77,7 @@
         </DockPanel>
         <DockPanel Grid.Row="3" Grid.Column="1" HorizontalSpacing="5" Margin="0,0,5,0">
 	        <Button Content="Менеджер компонентов" Command="{Binding OpenComponentManager}"/>
-            <Button Content="Сгенерировать"/>
+            <Button Content="Сгенерировать" Command="{Binding Test}"/>
         </DockPanel>
         <DockPanel Grid.Row="4" Grid.ColumnSpan="2" HorizontalSpacing="5">
             <TextBlock Text="Статус: "/>

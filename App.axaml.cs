@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using MockDataGenerator.Services;
 using MockDataGenerator.ViewModels;
 using MockDataGenerator.Views;
 using System.Linq;
@@ -18,6 +19,8 @@ namespace MockDataGenerator
 
         public override void OnFrameworkInitializationCompleted()
         {
+            ComponentService.InitComponentFolders();
+
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 

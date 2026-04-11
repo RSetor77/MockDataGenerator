@@ -1,4 +1,9 @@
-﻿using MockDataGenerator.Models;
+﻿using Avalonia.Controls;
+using Avalonia.Controls.Selection;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using MockDataGenerator.Models;
+using MockDataGenerator.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,23 +15,50 @@ namespace MockDataGenerator.ViewModels
 {
     public partial class ComponentManagerViewModel : ViewModelBase
     {
-        public ObservableCollection<OutputValueTypeHeader> OutputValueTypeHeaders { get; set; }
+        public event Action<Components?>? RequestClose;
 
-        public IList<OutputValueTypeHeader> SelectedOutputValueTypes { get; set; } = [];
+        // Списки
+
+        //Типы значений
+        [ObservableProperty]
+        private ObservableCollection<OutputValueType> _OutputValueTypes = [];
+        public SelectionModel<OutputValueType> OVTSelection { get; } = new();
+        //Правила БД
+        [ObservableProperty]
+        private ObservableCollection<DBMSRules> _dBMSRules = [];
+        public SelectionModel<DBMSRules> DBMSRulesSelection { get; } = new();
 
         public ComponentManagerViewModel()
         {
-            OutputValueTypeHeaders = [ 
-                new() { DisplayName = "Тест1", Type = ValueTypes.Decimal},
-                new() { DisplayName = "Тест2", Type = ValueTypes.Integer},
-                new() { DisplayName = "Тест3", Type = ValueTypes.String},
-                new() { DisplayName = "Тест4", Type = ValueTypes.Boolean}
-            ];
+            _ = InitComponents();
         }
 
-        public void Test()
+        public async Task InitComponents()
         {
+            try
+            {
+                var data = await ComponentService.GetComponentsAsync();
+                OutputValueTypes = new(data);
+            }
+            catch (Exception) { OutputValueTypes = []; }
+        }
 
+        public async Task Refresh()
+        {
+            await InitComponents();
+        }
+
+#pragma warning disable CA1822 // Метод не может быть статическим
+        public void OpenComponentFolder() => ComponentService.OpenComponentFolder();
+#pragma warning restore CA1822 // Метод не может быть статическим
+
+        public void ApplyAndClose()
+        {
+            var Output = new Components() { 
+                OutputValueTypes = OVTSelection.SelectedItems.Cast<OutputValueType>().ToArray(),
+                DBMSRules = DBMSRulesSelection.SelectedItems!.ToArray<DBMSRules>()
+            };
+            RequestClose?.Invoke(Output);
         }
     }
 }

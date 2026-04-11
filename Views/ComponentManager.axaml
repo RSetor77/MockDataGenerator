@@ -14,11 +14,11 @@
           <Button Grid.Column="1" Content="Найти"/>
       </Grid>
       <ListBox Grid.Row="1"
-               ItemsSource="{Binding OutputValueTypeHeaders}"
+               ItemsSource="{Binding OutputValueTypes}"
                SelectionMode="Multiple"
-               SelectedItems="{Binding SelectedOutputValueTypes}"> <!--Список компонентов-->
+               Selection="{Binding OVTSelection}"> <!--Список компонентов-->
 		  <ListBox.ItemTemplate>
-					<DataTemplate DataType="models:OutputValueTypeHeader">
+					<DataTemplate DataType="models:OutputValueType">
                         <Grid ColumnDefinitions="Auto, 2*, *">
                             <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}"
                                       Margin="5,0"/>
@@ -32,9 +32,10 @@
       </ListBox>
 	  <Grid Grid.Row="2"
             ColumnDefinitions="Auto, Auto, *">
-		  <Button Content="Синхронизировать" Command="{Binding Test}"/>
-          <Button Grid.Column="1" Content="Открыть в проводнике"/>
-          <Button Grid.Column="2" Content="Применить" HorizontalAlignment="Right"/>
+		  <Button Content="Синхронизировать" Command="{Binding Refresh}"/>
+          <Button Grid.Column="1" Content="Открыть в проводнике" Command="{Binding OpenComponentFolder}"/>
+          <Button Grid.Column="2" Content="Применить" HorizontalAlignment="Right"
+                  Command="{Binding ApplyAndClose}"/>
       </Grid>
   </Grid>
 </Window>
