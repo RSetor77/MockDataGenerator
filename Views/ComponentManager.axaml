@@ -6,7 +6,7 @@
         xmlns:models="using:MockDataGenerator.Models"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="MockDataGenerator.ComponentManager"
-        Title="ComponentManager"
+        Title="Менеджер компонентов"
         x:DataType="vm:ComponentManagerViewModel">
   <Grid RowDefinitions="Auto, *, Auto">
       <Grid ColumnDefinitions="*, Auto">

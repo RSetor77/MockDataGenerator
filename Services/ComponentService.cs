@@ -1,4 +1,5 @@
-﻿using MockDataGenerator.Models;
+﻿using MockDataGenerator.Conventers;
+using MockDataGenerator.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,6 +16,12 @@ namespace MockDataGenerator.Services
     public static class ComponentService
     {
         private static readonly string _componentFolderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Components");
+
+        private static readonly JsonSerializerOptions options = new() 
+        {
+            WriteIndented = true,
+            Converters = { new ObjectToInferredTypesConverter() }
+        };
         public static void InitComponentFolders()
         {
             Directory.CreateDirectory(_componentFolderPath);
@@ -69,7 +76,7 @@ namespace MockDataGenerator.Services
                                                     FileShare.ReadWrite);
             try
             {
-                return await JsonSerializer.DeserializeAsync<T>(fileStream);
+                return await JsonSerializer.DeserializeAsync<T>(fileStream, options);
             }
             catch (Exception)
             {

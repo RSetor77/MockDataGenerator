@@ -5,11 +5,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:models="using:MockDataGenerator.Models"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="450"
         x:Class="MockDataGenerator.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="MockDataGenerator">
+        Title="Mockingbird">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -24,19 +24,22 @@
             <TextBlock VerticalAlignment="Center" Text="Формат:"/>
             <ComboBox VerticalAlignment="Center" PlaceholderText="Тип файла"
                       ItemsSource="{Binding Formats}"
-                      SelectedItem="{Binding GenerationOptions.Format}">
+                      SelectedItem="{Binding SelectedFormat}">
             </ComboBox>
+            
         </DockPanel>
-		<controls:SQLFileSettings Grid.Column="1" IsVisible="False"/>
-        <controls:TextFileSettings Grid.Column="1"/>
+
+        <controls:SQLFileSettings Grid.Column="1" IsVisible="{Binding IsSQLSelected}"/>
+        <controls:TextFileSettings Grid.Column="1" IsVisible="{Binding IsTextSelected}"/>
+		
         <!-- Список -->
 
         <Grid Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="2"
               RowDefinitions="Auto, Auto, *" RowSpacing="3">
 			<TextBlock Text="Поля таблицы" FontWeight="Bold" FontSize="20"/>
             <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5">
-				<Button Content="+" Width="25"/>
-                <Button Content="📄+"/>
+				<Button Content="+" Width="25" Command="{Binding AddFieldCommand}"/>
+                <Button Content="📄+" Command="{Binding AddCopyCommand}"/>
             </StackPanel>
             <ListBox Grid.Row="2"
                      ItemsSource="{Binding Fields}"
@@ -53,7 +56,11 @@
                                      Grid.Column="1"
                                      Text="{Binding OutputValueType.DisplayName}"> <!--Привязать сюда тип предмета-->
 								<TextBox.InnerRightContent>
-									<Button Content="..."/>
+									<Button Content="..."
+                                            Click="SelectOutputValueType_Click"
+                                            CommandParameter="{Binding}"/>
+                                            <!--Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).SelectOutputValueTypeCommand}"
+                                            CommandParameter="{Binding OutputValueType}"/ -->
                                 </TextBox.InnerRightContent>
                             </TextBox>
                             <NumericUpDown Watermark="% пустых" 
@@ -62,7 +69,9 @@
                                            Grid.Column="2"
                                            Value="{Binding Blank}"/>
                             <Button Content="x"
-                                    Grid.Column="3"/>
+                                    Grid.Column="3"
+                                    Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).RemoveFieldCommand}"
+                                    CommandParameter="{Binding}"/>
                             <Button Content="..."
                                     Grid.Column="4"/>
                         </Grid>
@@ -77,11 +86,11 @@
         </DockPanel>
         <DockPanel Grid.Row="3" Grid.Column="1" HorizontalSpacing="5" Margin="0,0,5,0">
 	        <Button Content="Менеджер компонентов" Command="{Binding OpenComponentManager}"/>
-            <Button Content="Сгенерировать" Command="{Binding Test}"/>
+            <Button Content="Сгенерировать"/>
         </DockPanel>
         <DockPanel Grid.Row="4" Grid.ColumnSpan="2" HorizontalSpacing="5">
             <TextBlock Text="Статус: "/>
-            <TextBlock Text="В разработке..."/>
+            <TextBlock Text="{Binding Status}"/>
             <Separator/>
             <TextBlock Text="Процесс:"/>
             <ProgressBar Grid.Row="4" 

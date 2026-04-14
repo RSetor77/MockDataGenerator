@@ -12,6 +12,6 @@ namespace MockDataGenerator.Models
         public required string DisplayName { get; set; }
         public ValueTypes Type { get; set; }
         public GenerationTypes GenerationType { get; set; }
-        public required object[] Data { get; set; }
+        public required Dictionary<string, object> Data { get; set; }
     }
 }

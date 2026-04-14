@@ -55,8 +55,8 @@ namespace MockDataGenerator.ViewModels
         public void ApplyAndClose()
         {
             var Output = new Components() { 
-                OutputValueTypes = OVTSelection.SelectedItems.Cast<OutputValueType>().ToArray(),
-                DBMSRules = DBMSRulesSelection.SelectedItems!.ToArray<DBMSRules>()
+                OutputValueTypes = [.. OVTSelection.SelectedItems.Cast<OutputValueType>()],
+                DBMSRules = [.. DBMSRulesSelection.SelectedItems!]
             };
             RequestClose?.Invoke(Output);
         }

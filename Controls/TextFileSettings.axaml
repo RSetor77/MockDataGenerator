@@ -2,21 +2,33 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:text="using:System.Text"
              xmlns:viewmodels="using:MockDataGenerator.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="100"
+             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="100"
              x:Class="MockDataGenerator.Controls.TextFileSettings"
              x:DataType="viewmodels:MainWindowViewModel">
-  <Grid ColumnDefinitions="Auto, Auto, Auto" RowDefinitions="Auto" ColumnSpacing="5">
+  <Grid ColumnDefinitions="Auto, Auto" RowDefinitions="Auto" ColumnSpacing="5">
       <StackPanel Orientation="Horizontal" >
 		  <TextBlock VerticalAlignment="Center" Text="Разделитель: "/>
           <TextBox MaxLength="1" MinWidth="20"
-                   Text="{Binding GenerationOptions.Separator}"/>
+                   Text="{Binding TxtSeparator}"/>
       </StackPanel>
-      <StackPanel Orientation="Horizontal" Grid.Column="1">
+      <StackPanel Orientation="Horizontal" Grid.Column="1" Spacing="5">
 		  <TextBlock VerticalAlignment="Center" Text="Кодировка: "/>
           <ComboBox MinWidth="100"
                     ItemsSource="{Binding Encodings}"
-                    SelectedItem="{Binding GenerationOptions.Encoding}"/>
+                    SelectedItem="{Binding SelectedEncoding}"
+                    PlaceholderText="Выберите кодировку...">
+              <ComboBox.ItemTemplate>
+				  <DataTemplate DataType="text:EncodingInfo">
+					  <TextBlock Text="{Binding Name}"/>
+                  </DataTemplate>
+              </ComboBox.ItemTemplate>
+          
+          </ComboBox>
+          <CheckBox Content="BOM?"
+                    IsChecked="{Binding UseBOM}"
+                    IsEnabled="{Binding IsUTFEncoding}"/>
       </StackPanel>
   </Grid>
 </UserControl>

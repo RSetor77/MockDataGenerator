@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace MockDataGenerator;
 
-public partial class ValueTypeSelect : Window
+public partial class SelectWindow : Window
 {
-    public ValueTypeSelect()
+    public SelectWindow()
     {
         InitializeComponent();
     }
