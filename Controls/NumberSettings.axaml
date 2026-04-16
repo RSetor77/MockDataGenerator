@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MockDataGenerator.NumberSettings">
+  <Grid RowDefinitions="Auto, Auto" 
+        RowSpacing="5"
+        ColumnDefinitions="*, *">
+
+	    <TextBlock VerticalAlignment="Center" 
+                   Text="Минимальное:"/>
+        <NumericUpDown Watermark="Введите минимальное число..."
+                       Grid.Column="1" Minimum="1"/>
+
+		<TextBlock VerticalAlignment="Center" Text="Максимальное число:"
+                   Grid.Row="1"/>
+        <NumericUpDown Watermark="Введите максимальное число..."
+                 Grid.Row="1" Grid.Column="1"
+                 Minimum="1"/>
+
+  </Grid>
+</UserControl>

@@ -7,14 +7,25 @@ using System.Threading.Tasks;
 
 namespace MockDataGenerator.Models
 {
-    public partial class Field: ObservableObject
+    public partial class Field : ObservableObject
     {
-        public string? Name { get; set; }
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsValid))]
+        private string? _name = string.Empty;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsValid))]
         private OutputValueType? _outputValueType;
 
         public int Blank { get; set; } = 0;
         public Dictionary<string, int>? Options { get; set; }
+
+        public bool IsValid 
+        {
+            get
+            {
+                return Name != null && OutputValueType != null;
+            }
+        }
     }
 }

@@ -9,11 +9,13 @@ namespace MockDataGenerator.Models
     public class GenerationOptions
     {
         public required ushort RecordsCount { get; set; } = 1;
-        public FileFormats Format { get; set; }
+        public required FileFormats Format { get; set; }
         public DBMSRules? DBMS {  get; set; }
         public string? TableName { get; set; }
-        public bool NeedCreateTable { get; set; }
-        public FileEncodings Encoding { get; set; }
-        public char? Separator { get; set; }
+        public bool CreateTable { get; set; }
+        public bool CreateHeader { get; set; }
+        public required Encoding Encoding { get; set; }
+        public bool BOM { get; set; }
+        public char Separator { get; set; }
     }
 }

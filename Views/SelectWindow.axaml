@@ -8,7 +8,7 @@
         x:Class="MockDataGenerator.SelectWindow"
         Title="SelectWindow"
         x:DataType="viewmodels:SelectWindowViewModel">
-    <Grid>
+    <Grid RowDefinitions="*, Auto">
 		<ListBox ItemsSource="{Binding ValueTypes}"
                  SelectedItem="{Binding SelectedValueType}"
                  SelectionMode="Single">
@@ -18,6 +18,9 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Button HorizontalAlignment="Right"/>
+        <Button HorizontalAlignment="Right"
+                Command="{Binding SelectAndCloseCommand}"
+                Content="Выбрать"
+                Grid.Row="1"/>
     </Grid>
 </Window>

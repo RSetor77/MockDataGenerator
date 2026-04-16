@@ -1,0 +1,71 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StreamGeometry x:Key="AddCopyData">
+		M 4.28,3.246 V 23.56027
+        M 3.5922101,3.9968801 H 17.23983
+        M 16.67284,3.7993801 3.549521,3.5495197
+        M 20.00617,6.82408 V 23.613279
+        M 3.5246899,22.873461 H 20.43862
+        m 12.16667,13.24383 v 8.467821
+        m 7.99544,17.472219 h 8.39587
+    </StreamGeometry>
+
+    <StreamGeometry x:Key="OpenInExplorerData">
+		M 2.0625801,1.38256 V 22.06069
+        M 1.53176,2.14763 H 9.855566
+        M 1.32162,21.334431 H 21.507389
+        M 8.3567896,4.5840201 H 21.510099
+        M 20.75209,5.2540398 V 21.58568
+        M 4.0854301,7.4315901 H 21.589611 V 21.920691 H 4.0854301 Z
+        m 9.1077662,2.2145019 -0.00318,2.4343075
+    </StreamGeometry>
+
+    <StreamGeometry x:Key="SyncIconData">
+		M 3.33167,4.5787902 H 21.08729
+        M 4.0854301,5.2488098 V 11.79735
+        M 3.0840001,9.5752802 V 13.85975
+        M 5.1380501,9.5752802 V 13.85975
+        M 20.34206,5.2796798 V 8
+        M 3.44383,19.16861 H 21.19945
+        m 20.44569,11.95005 v 6.54854
+        m 19.39307,9.88764 v 4.28447
+        m 21.447121,9.88764 v 4.28447
+        m 4.1890602,16 v 3
+    </StreamGeometry>
+
+    <DrawingImage x:Key="AddCopyIcon">
+		<GeometryDrawing Geometry="{StaticResource AddCopyData}"
+                         Brush="Transparent">
+            <GeometryDrawing.Pen>
+                <Pen Brush="{DynamicResource SystemControlForegroundBaseHighBrush}" 
+                     Thickness="2" 
+                     LineCap="Flat" 
+                     LineJoin="Miter" />
+            </GeometryDrawing.Pen>
+        </GeometryDrawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="OpenInExplorerIcon">
+		<GeometryDrawing Geometry="{StaticResource OpenInExplorerData}"
+                         Brush="Transparent">
+            <GeometryDrawing.Pen>
+                <Pen Brush="{DynamicResource SystemControlForegroundBaseHighBrush}" 
+                     Thickness="2" 
+                     LineCap="Flat" 
+                     LineJoin="Miter" />
+            </GeometryDrawing.Pen>
+        </GeometryDrawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="SyncIcon">
+		<GeometryDrawing Geometry="{StaticResource SyncIconData}"
+                         Brush="Transparent">
+            <GeometryDrawing.Pen>
+                <Pen Brush="{DynamicResource SystemControlForegroundBaseHighBrush}" 
+                     Thickness="2" 
+                     LineCap="Flat" 
+                     LineJoin="Miter" />
+            </GeometryDrawing.Pen>
+        </GeometryDrawing>
+    </DrawingImage>
+</ResourceDictionary>

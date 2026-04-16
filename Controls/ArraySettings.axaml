@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="using:MockDataGenerator.Models"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MockDataGenerator.ArraySettings"
+             x:DataType="models:OutputValueType">
+  <Grid RowDefinitions="Auto, *" 
+        ColumnDefinitions="Auto,*">
+
+          <Button Content="+" MinWidth="24"
+                  Click="AddItem_Click"/>
+		  <ListBox  x:Name="ArrayList"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2" 
+                    ItemsSource="{Binding Data[Array]}">
+              <ListBox.ItemTemplate>
+				  <DataTemplate>
+					  <TextBox Text="{Binding}" Watermark="Введите значение..."/>
+                  </DataTemplate>
+              </ListBox.ItemTemplate>
+          </ListBox>
+
+      </Grid>
+</UserControl>

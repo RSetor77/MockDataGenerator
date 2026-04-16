@@ -4,31 +4,42 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:text="using:System.Text"
              xmlns:viewmodels="using:MockDataGenerator.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="100"
+             mc:Ignorable="d" d:DesignWidth="550" d:DesignHeight="100"
              x:Class="MockDataGenerator.Controls.TextFileSettings"
              x:DataType="viewmodels:MainWindowViewModel">
-  <Grid ColumnDefinitions="Auto, Auto" RowDefinitions="Auto" ColumnSpacing="5">
-      <StackPanel Orientation="Horizontal" >
-		  <TextBlock VerticalAlignment="Center" Text="Разделитель: "/>
-          <TextBox MaxLength="1" MinWidth="20"
-                   Text="{Binding TxtSeparator}"/>
-      </StackPanel>
-      <StackPanel Orientation="Horizontal" Grid.Column="1" Spacing="5">
-		  <TextBlock VerticalAlignment="Center" Text="Кодировка: "/>
-          <ComboBox MinWidth="100"
-                    ItemsSource="{Binding Encodings}"
-                    SelectedItem="{Binding SelectedEncoding}"
-                    PlaceholderText="Выберите кодировку...">
-              <ComboBox.ItemTemplate>
-				  <DataTemplate DataType="text:EncodingInfo">
-					  <TextBlock Text="{Binding Name}"/>
-                  </DataTemplate>
-              </ComboBox.ItemTemplate>
+
+	  <Grid ColumnDefinitions="Auto, Auto" RowDefinitions="Auto" ColumnSpacing="5">
+          <StackPanel Orientation="Horizontal" >
+		      <TextBlock VerticalAlignment="Center" Text="Разделитель: "/>
+              <TextBox MaxLength="1" MinWidth="20"
+                       Text="{Binding TxtSeparator}"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Grid.Column="1" Spacing="5">
+		      <TextBlock VerticalAlignment="Center" Text="Кодировка: "/>
+              <ComboBox MinWidth="100"
+                        ItemsSource="{Binding Encodings}"
+                        SelectedItem="{Binding SelectedEncoding}"
+                        PlaceholderText="Выберите кодировку...">
+                  <ComboBox.ItemTemplate>
+				      <DataTemplate DataType="text:EncodingInfo">
+					      <TextBlock Text="{Binding Name}"/>
+                      </DataTemplate>
+                  </ComboBox.ItemTemplate>
+
+                  <!--ComboBox.ItemContainerTheme>
+				      <Style Selector="ComboBoxItem">
+					      <Setter Property=""/>
+                      </Style>
+                  </ComboBox.ItemContainerTheme-->
           
-          </ComboBox>
-          <CheckBox Content="BOM?"
-                    IsChecked="{Binding UseBOM}"
-                    IsEnabled="{Binding IsUTFEncoding}"/>
-      </StackPanel>
-  </Grid>
+              </ComboBox>
+              <CheckBox Content="BOM?"
+                        IsChecked="{Binding UseBOM}"
+                        IsEnabled="{Binding IsUTFEncoding}"/>
+              <CheckBox Content="Создать заголовок?"
+                        IsChecked="{Binding CreateHeader}"
+                        IsVisible="{Binding IsCSVSelected}"/>
+          </StackPanel>
+      </Grid>
+  
 </UserControl>

@@ -9,7 +9,7 @@ namespace MockDataGenerator;
 
 public partial class ComponentManager : Window
 {
-    private ComponentManagerViewModel? _viewModel;
+    private readonly ComponentManagerViewModel? _viewModel;
     public ComponentManager()
     {
         InitializeComponent();

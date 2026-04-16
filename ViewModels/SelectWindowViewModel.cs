@@ -1,4 +1,5 @@
-﻿using MockDataGenerator.Models;
+﻿using CommunityToolkit.Mvvm.Input;
+using MockDataGenerator.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,9 +9,11 @@ using System.Threading.Tasks;
 
 namespace MockDataGenerator.ViewModels
 {
-    public class SelectWindowViewModel: ViewModelBase
+    public partial class SelectWindowViewModel: ViewModelBase
     {
-        public ObservableCollection<OutputValueType> ValueTypes { get; } = new();
+        public event Action<OutputValueType?>? RequestClose;
+
+        public ObservableCollection<OutputValueType> ValueTypes { get; } = [];
 
         public OutputValueType? SelectedValueType { get; set; }
 
@@ -19,6 +22,18 @@ namespace MockDataGenerator.ViewModels
         public SelectWindowViewModel(List<OutputValueType> values)
         {
             ValueTypes = new(values);
+        }
+
+        public SelectWindowViewModel(OutputValueType[]? values)
+        {
+            if (values != null)
+                ValueTypes = new(values);
+        }
+
+        [RelayCommand]
+        public void SelectAndClose()
+        {
+            RequestClose?.Invoke(SelectedValueType);
         }
     }
 }

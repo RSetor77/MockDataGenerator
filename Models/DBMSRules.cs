@@ -10,8 +10,10 @@ namespace MockDataGenerator.Models
     public class DBMSRules
     {
         public required string DisplayName { get; set; }
-        public char StringChar { get; set; } = '"';
+        public char StringChar { get; set; } = '\'';
         public char NameQuoteChar { get; set; } = '\'';
         public required Dictionary<string, string> DataFormats { get; set; }
+        public int EncodingCodePage { get; set; }
+        public bool CompactInsert { get; set; }
     }
 }

@@ -22,7 +22,7 @@ namespace MockDataGenerator.ViewModels
         //Типы значений
         [ObservableProperty]
         private ObservableCollection<OutputValueType> _OutputValueTypes = [];
-        public SelectionModel<OutputValueType> OVTSelection { get; } = new();
+        public SelectionModel<OutputValueType> OVTSelection { get; } = new() { SingleSelect = false };
         //Правила БД
         [ObservableProperty]
         private ObservableCollection<DBMSRules> _dBMSRules = [];

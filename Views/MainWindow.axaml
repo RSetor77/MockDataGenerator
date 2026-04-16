@@ -39,7 +39,9 @@
 			<TextBlock Text="Поля таблицы" FontWeight="Bold" FontSize="20"/>
             <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5">
 				<Button Content="+" Width="25" Command="{Binding AddFieldCommand}"/>
-                <Button Content="📄+" Command="{Binding AddCopyCommand}"/>
+                <Button Command="{Binding AddCopyCommand}">
+					📄+
+                </Button>
             </StackPanel>
             <ListBox Grid.Row="2"
                      ItemsSource="{Binding Fields}"
@@ -57,11 +59,17 @@
                                      Text="{Binding OutputValueType.DisplayName}"> <!--Привязать сюда тип предмета-->
 								<TextBox.InnerRightContent>
 									<Button Content="..."
-                                            Click="SelectOutputValueType_Click"
+                                            Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).SelectOVT}"
                                             CommandParameter="{Binding}"/>
                                             <!--Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).SelectOutputValueTypeCommand}"
-                                            CommandParameter="{Binding OutputValueType}"/ -->
+                                            CommandParameter="{Binding OutputValueType}"/ 
+                                            Click="SelectOutputValueType_Click"-->
                                 </TextBox.InnerRightContent>
+                                <TextBox.Styles>
+                                    <Style Selector="TextBox /template/ TextPresenter">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </TextBox.Styles>
                             </TextBox>
                             <NumericUpDown Watermark="% пустых" 
                                            Minimum="0" 
@@ -86,7 +94,7 @@
         </DockPanel>
         <DockPanel Grid.Row="3" Grid.Column="1" HorizontalSpacing="5" Margin="0,0,5,0">
 	        <Button Content="Менеджер компонентов" Command="{Binding OpenComponentManager}"/>
-            <Button Content="Сгенерировать"/>
+            <Button Content="Сгенерировать" Command="{Binding GenerateCommand}"/>
         </DockPanel>
         <DockPanel Grid.Row="4" Grid.ColumnSpan="2" HorizontalSpacing="5">
             <TextBlock Text="Статус: "/>
