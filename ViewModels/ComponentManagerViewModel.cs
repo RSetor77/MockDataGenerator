@@ -2,6 +2,7 @@
 using Avalonia.Controls.Selection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MockDataGenerator.Interfaces;
 using MockDataGenerator.Models;
 using MockDataGenerator.Services;
 using System;
@@ -19,33 +20,77 @@ namespace MockDataGenerator.ViewModels
 
         // Списки
 
+        public ObservableCollection<IMockComponent> ComponentList { get; } = [];
+        public SelectionModel<IMockComponent> Selection { get; } = new() { SingleSelect = false };
+
+        [ObservableProperty]
+        public int _currentTab;
+
+        private byte _lastIndex = 0;
+
+        partial void OnCurrentTabChanged(int value)
+        {
+            if (_lastIndex == 0)
+                ComponentSelection.OutputValueTypes = [.. Selection.SelectedItems.OfType<OutputValueType>()];
+            else if (_lastIndex == 1)
+                ComponentSelection.DBMSRules = [.. Selection.SelectedItems.OfType<DBMSRules>()];
+
+            SetList(value);
+
+            _lastIndex = (byte)value;
+        }
+
+        private void SetList(int value)
+        {
+            if (value == 0)
+            {
+                UpdateList(OutputValueTypes);
+            }
+            else if (value == 1)
+            {
+                UpdateList(DBMSRules);
+            }   
+            else UpdateList([]);
+        }
+
+        private void UpdateList(IEnumerable<IMockComponent> list)
+        {
+            ComponentList.Clear();
+            foreach(IMockComponent item in  list)
+            {
+                ComponentList.Add(item);
+            }
+        }
+
         //Типы значений
-        [ObservableProperty]
-        private ObservableCollection<OutputValueType> _OutputValueTypes = [];
-        public SelectionModel<OutputValueType> OVTSelection { get; } = new() { SingleSelect = false };
-        //Правила БД
-        [ObservableProperty]
-        private ObservableCollection<DBMSRules> _dBMSRules = [];
-        public SelectionModel<DBMSRules> DBMSRulesSelection { get; } = new();
+        public List<OutputValueType> OutputValueTypes { get; set; } = [];
+        public List<DBMSRules> DBMSRules = [];
+
+        public Components ComponentSelection { get; } = new();
 
         public ComponentManagerViewModel()
         {
-            _ = InitComponents();
+            _ = Refresh();
         }
 
         public async Task InitComponents()
         {
             try
             {
-                var data = await ComponentService.GetComponentsAsync();
-                OutputValueTypes = new(data);
+                OutputValueTypes = [.. await ComponentService.GetComponentsAsync<OutputValueType>()];
+                DBMSRules = [.. await ComponentService.GetComponentsAsync<DBMSRules>()];
             }
-            catch (Exception) { OutputValueTypes = []; }
+            catch (Exception) { 
+                OutputValueTypes = [];
+                DBMSRules = [];
+            }
         }
 
         public async Task Refresh()
         {
+            ComponentList.Clear();
             await InitComponents();
+            SetList(CurrentTab);
         }
 
 #pragma warning disable CA1822 // Метод не может быть статическим
@@ -54,11 +99,12 @@ namespace MockDataGenerator.ViewModels
 
         public void ApplyAndClose()
         {
-            var Output = new Components() { 
-                OutputValueTypes = [.. OVTSelection.SelectedItems.Cast<OutputValueType>()],
-                DBMSRules = [.. DBMSRulesSelection.SelectedItems!]
-            };
-            RequestClose?.Invoke(Output);
+            if (CurrentTab == 0)
+                ComponentSelection.OutputValueTypes = [.. Selection.SelectedItems.OfType<OutputValueType>()];
+            else
+                ComponentSelection.DBMSRules = [.. Selection.SelectedItems.OfType<DBMSRules>()];
+
+            RequestClose?.Invoke(ComponentSelection);
         }
     }
 }

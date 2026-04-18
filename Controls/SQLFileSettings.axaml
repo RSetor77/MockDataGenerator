@@ -3,6 +3,7 @@
              xmlns:vm="using:MockDataGenerator.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="using:MockDataGenerator.Models"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="100"
              x:Class="MockDataGenerator.Controls.SQLFileSettings"
              x:DataType="vm:MainWindowViewModel">
@@ -11,7 +12,13 @@
 		  <TextBlock VerticalAlignment="Center" Text="СУБД: "/>
           <ComboBox MinWidth="100"
                     ItemsSource="{Binding DBMSRules}"
-                    SelectedItem="{Binding SelectedDBMSRules}"/>
+                    SelectedItem="{Binding SelectedDBMSRules}">
+              <ComboBox.ItemTemplate>
+				  <DataTemplate DataType="models:DBMSRules" x:DataType="models:DBMSRules">
+					  <TextBlock Text="{Binding DisplayName}"/>
+                  </DataTemplate>
+              </ComboBox.ItemTemplate>
+          </ComboBox>
       </StackPanel>
       <DockPanel Grid.Column="1">
 		  <TextBlock VerticalAlignment="Center" Text="Имя таблицы: "/>

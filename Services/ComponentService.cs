@@ -1,4 +1,5 @@
 ﻿using MockDataGenerator.Conventers;
+using MockDataGenerator.Interfaces;
 using MockDataGenerator.Models;
 using System;
 using System.Collections.Generic;
@@ -98,10 +99,44 @@ namespace MockDataGenerator.Services
             //После чтения всех файлов записываем все, что прочитали.
             OutputValueType?[] results = await Task.WhenAll(tasks);
 
-            Dictionary<string, OutputValueType> importComponents = new(fileComponents.Length, 
+            Dictionary<string, OutputValueType> importComponents = new(fileComponents.Length,
                 StringComparer.InvariantCultureIgnoreCase);
 
-            foreach(var component in results)
+            foreach (var component in results)
+            {
+                if (component != null)
+                {
+                    importComponents.TryAdd(component.DisplayName.Trim(), component);
+                }
+            }
+
+            return importComponents.Values;
+        }
+
+        public async static Task<IEnumerable<T>> GetComponentsAsync<T>()
+            where T : class, IMockComponent
+        {
+            DirectoryInfo? componentsFolder = null;
+
+            if (typeof(T) == typeof(OutputValueType))
+                componentsFolder = InitComponentFolder("ValueTypes");
+            else
+                componentsFolder = InitComponentFolder("DBMSRules");
+
+            if (componentsFolder == null) return [];
+
+            var fileComponents = componentsFolder.GetFiles("*.json", SearchOption.TopDirectoryOnly);
+
+            if (fileComponents.Length == 0) return [];
+            //Читаем все файлы в папке
+            var tasks = fileComponents.Select(file => ReadFileAsync<T>(file));
+            //После чтения всех файлов записываем все, что прочитали.
+            T?[] results = await Task.WhenAll(tasks);
+
+            Dictionary<string, T> importComponents = new(fileComponents.Length,
+                StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var component in results)
             {
                 if (component != null)
                 {

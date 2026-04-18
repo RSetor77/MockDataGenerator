@@ -1,17 +1,20 @@
-﻿using System;
+﻿using MockDataGenerator.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MockDataGenerator.Models
 {
-    public class OutputValueType
+    public class OutputValueType: IMockComponent
     {
         public required string DisplayName { get; set; }
         public ValueTypes Type { get; set; }
         public GenerationTypes GenerationType { get; set; }
         public required Dictionary<string, object> Data { get; set; }
+        public string? CustomTypeKey { get; set; }
     }
 }

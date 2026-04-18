@@ -27,7 +27,7 @@ namespace MockDataGenerator.ViewModels
         public EncodingInfo[] Encodings { get; } = Encoding.GetEncodings();
         public ObservableCollection<Field> Fields { get; set; } = [];
         public OutputValueType[]? OutputValueTypes { get; set; }
-        public DBMSRules[]? DBMSRules { get; set; }
+        public ObservableCollection<DBMSRules> DBMSRules { get; set; } = [];
         public bool CanAdd => Fields.Count < 1000;
         public string? TxtSeparator { get; set; }
         public bool CreateHeader { get; set; }
@@ -125,7 +125,11 @@ namespace MockDataGenerator.ViewModels
             RequestComponents?.Invoke(result =>
             {
                 OutputValueTypes = result.OutputValueTypes;
-                DBMSRules = result.DBMSRules;
+                DBMSRules.Clear();
+                foreach(DBMSRules rule in result.DBMSRules)
+                {
+                    DBMSRules.Add(rule);
+                }
             });
         }
 
