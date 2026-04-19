@@ -19,7 +19,8 @@
               <ComboBox MinWidth="100"
                         ItemsSource="{Binding Encodings}"
                         SelectedItem="{Binding SelectedEncoding}"
-                        PlaceholderText="Выберите кодировку...">
+                        PlaceholderText="Выберите кодировку..."
+                        IsTextSearchEnabled="True">
                   <ComboBox.ItemTemplate>
 				      <DataTemplate DataType="text:EncodingInfo">
 					      <TextBlock Text="{Binding Name}"/>
