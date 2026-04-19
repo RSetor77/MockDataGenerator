@@ -53,12 +53,12 @@ namespace MockDataGenerator.ViewModels
         public bool IsTextSelected => SelectedFormat == FileFormats.CSV || SelectedFormat == FileFormats.TXT;
         public bool IsCSVSelected => SelectedFormat == FileFormats.CSV;
 
-        private IEnumerable<EncodingInfo> encodings
+        private static IEnumerable<EncodingInfo> EncodingsSorted
         {
             get
             {
                 var all = Encoding.GetEncodings();
-                int[] priorityCodes = { 65001, 1251, 1200, 866 };
+                int[] priorityCodes = [65001, 1251, 1200, 866];
                 var popular = all.Where(e => priorityCodes.Contains(e.CodePage)).OrderBy(e => Array.IndexOf(priorityCodes, e.CodePage));
                 var others = all.Where(e => !priorityCodes.Contains(e.CodePage)).OrderBy(e => e.CodePage);
                 var final = popular.Select(e => e).Concat(others.Select(e => e)).ToList();
@@ -80,6 +80,9 @@ namespace MockDataGenerator.ViewModels
                 {
                     IsTableValid = Fields.Count > 0 && Fields.All(f => f.IsValid);
                     IsValid = SelectedEncoding != null && IsTableValid;
+                } else
+                {
+                    IsValid = Fields.Count > 0 && Fields.All(f => f.IsValid) && SelectedFormat != null;
                 }
 
                 return IsValid;
@@ -134,7 +137,7 @@ namespace MockDataGenerator.ViewModels
                 NotifyCommands();
             };
 
-            Encodings = [..encodings];
+            Encodings = [..EncodingsSorted];
         }
 
         public void OpenComponentManager()
@@ -180,8 +183,8 @@ namespace MockDataGenerator.ViewModels
             });
         }
 
-        [RelayCommand(CanExecute = nameof(CanGenerate))]
-        public void Generate()
+        [RelayCommand(CanExecute = nameof(CanGenerate), AllowConcurrentExecutions = false)]
+        public async Task Generate()
         {
             string? filePath = string.Empty;
             Encoding encoding;

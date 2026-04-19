@@ -29,6 +29,10 @@
         {
           "const": "Custom",
           "description": "Требует заполнения CustomTypeKey."
+        },
+        {
+          "const": "QuotedCustom",
+          "description": "Требует заполнения CustomTypeKey. При генерации оформляется кавычками."
         }
       ]
     },
@@ -116,6 +120,10 @@
   "allOf": [
     {
       "if": { "properties": { "Type": { "const": "Custom" } } },
+      "then": { "required": [ "CustomTypeKey" ] }
+    },
+    {
+      "if": { "properties": { "Type": { "const": "QuotedCustom" } } },
       "then": { "required": [ "CustomTypeKey" ] }
     },
     {

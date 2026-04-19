@@ -5,16 +5,23 @@ using MockDataGenerator.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace MockDataGenerator.Services
 {
     public static class GenerationService
     {
+        private static readonly JsonSerializerOptions jsonOptions = new() { 
+            WriteIndented = true, 
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
         public static async Task GenerateFile(Field[] fields, IStorageFile file, GenerationOptions options)
         {
             await using var stream = await file.OpenWriteAsync();
@@ -31,6 +38,10 @@ namespace MockDataGenerator.Services
                 case FileFormats.SQL:
                     await GenerateSQL(stream, fields, options);
                     break;
+                case FileFormats.JSON:
+                    await GenerateJSON(stream, fields, options);
+                    break;
+                default: break;
 
             }
         }
@@ -44,7 +55,7 @@ namespace MockDataGenerator.Services
                 //Генерируем данные
                 for (ushort j = 0; j < fields.Length; j++)
                 {
-                    await writer.WriteAsync(GenerateData(fields[j].OutputValueType!, fields[j].Blank, i, null!));
+                    await writer.WriteAsync(GenerateDataString(fields[j].OutputValueType!, fields[j].Blank, i));
                     if (j + 1 < fields.Length)
                         await writer.WriteAsync(options.Separator);
                 }
@@ -63,11 +74,11 @@ namespace MockDataGenerator.Services
                 //Генерируем данные
                 for (ushort j = 0; j < fields.Length; j++)
                 {
-                    string rawData = GenerateData(fields[j].OutputValueType!, fields[j].Blank, i, null!);
+                    string rawData = GenerateDataString(fields[j].OutputValueType!, fields[j].Blank, i);
 
                     if (!rawData.Equals("Null", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        if (fields[j].OutputValueType!.Type == ValueTypes.String)
+                        if (fields[j].OutputValueType!.Type == ValueTypes.String || fields[j].OutputValueType!.Type == ValueTypes.QuotedCustom)
                         {
                             string formattedData = $"\"{rawData.Replace("\"", "\"\"")}\"";
 
@@ -100,9 +111,9 @@ namespace MockDataGenerator.Services
                 //Генерируем данные
                 for (ushort j = 0; j < fields.Length; j++)
                 {
-                    string rawData = GenerateData(fields[j].OutputValueType!, fields[j].Blank, i, options.DBMS!);
+                    string rawData = GenerateDataString(fields[j].OutputValueType!, fields[j].Blank, i);
 
-                    if (fields[j].OutputValueType!.Type == ValueTypes.String && !rawData.Equals("NULL", StringComparison.OrdinalIgnoreCase))
+                    if ((fields[j].OutputValueType!.Type == ValueTypes.String || fields[j].OutputValueType!.Type == ValueTypes.QuotedCustom) && !rawData.Equals("NULL", StringComparison.OrdinalIgnoreCase))
                     {
                         char quote = options.DBMS!.StringChar;
                         string formattedData = $"{quote}{rawData.Replace(quote.ToString(), new string(quote, 2))}{quote}";
@@ -118,6 +129,22 @@ namespace MockDataGenerator.Services
                 if (i < options.RecordsCount - 1) await writer.WriteLineAsync(options.DBMS!.CompactInsert ? ")," : ");");
                 else await writer.WriteLineAsync(");");
             }
+        }
+
+        public static async Task GenerateJSON(Stream stream, Field[] fields, GenerationOptions options)
+        {
+            var objects = new List<Dictionary<string, object>>(options.RecordsCount);
+            for (ushort i=0; i<options.RecordsCount; i++)
+            {
+                var row = new Dictionary<string, object?>();
+                foreach(Field field in fields)
+                {
+                    object? value = GenerateDataObject(field.OutputValueType!, field.Blank, i);
+                    row.Add(field.Name!, value);
+                }
+                objects.Add(row!);
+            }
+            await JsonSerializer.SerializeAsync(stream, objects, jsonOptions);
         }
 
         private static async Task WriteHeader(StreamWriter writer, Field[] fields, char separator)
@@ -144,6 +171,7 @@ namespace MockDataGenerator.Services
                     ValueTypes.Decimal => rules.DataFormats.GetValueOrDefault("Decimal", DBMSRules.SystemDefaults["Decimal"]),
                     ValueTypes.Boolean => rules.DataFormats.GetValueOrDefault("Boolean", DBMSRules.SystemDefaults["Boolean"]),
                     ValueTypes.Custom => rules.DataFormats.GetValueOrDefault(fields[i].OutputValueType!.CustomTypeKey ?? "String", DBMSRules.SystemDefaults["String"]),
+                    ValueTypes.QuotedCustom => rules.DataFormats.GetValueOrDefault(fields[i].OutputValueType!.CustomTypeKey ?? "String", DBMSRules.SystemDefaults["String"]),
                     _ => throw new ArgumentOutOfRangeException(nameof(fields), "Неизвестный тип данных")
                 };
                 string fieldString = $"\t{rules.NameQuoteOpen}{fields[i].Name}{rules.NameQuoteClose} {formattedType}";
@@ -185,7 +213,7 @@ namespace MockDataGenerator.Services
             await writer.WriteAsync($") VALUES (");
         }
 
-        private static string GenerateData(OutputValueType type, int BlankChance, ushort counter, DBMSRules rules)
+        private static string GenerateDataString(OutputValueType type, int BlankChance, ushort counter)
         {
             string value;
             if (BlankChance > 0)
@@ -246,6 +274,67 @@ namespace MockDataGenerator.Services
                 type.Type = ValueTypes.String;
             }
                 
+            return value;
+        }
+
+        private static object? GenerateDataObject(OutputValueType type, int BlankChance, ushort counter)
+        {
+            object? value;
+            if (BlankChance > 0)
+            {
+                bool isBlank = Random.Shared.NextSingle() < (Convert.ToSingle(BlankChance) / 100);
+                if (isBlank) return null; 
+            }
+            try
+            {
+                switch (type.GenerationType)
+                {
+                    case GenerationTypes.Number:
+                        if (type.Type == ValueTypes.Integer)
+                        {
+                            int min = type.Data.TryGetValue("Min", out object? resultMin) ? Convert.ToInt32(resultMin) : 0;
+                            int max = type.Data.TryGetValue("Max", out object? resultMax) ? Convert.ToInt32(resultMax) : 99;
+                            int number = Random.Shared.Next(min, max);
+                            value = number;
+                        }
+                        else if (type.Type == ValueTypes.Decimal)
+                        {
+                            double min = type.Data.TryGetValue("Min", out object? resultMin) ? Convert.ToDouble(resultMin) : 0;
+                            double max = type.Data.TryGetValue("Max", out object? resultMax) ? Convert.ToDouble(resultMax) : 99;
+                            decimal number = Convert.ToDecimal(Random.Shared.NextDouble() * (max - min) + min);
+                            value = number;
+                        }
+                        else throw new Exception("Invalid Parameters");
+                        break;
+                    case GenerationTypes.Array:
+                        var arrayData = (List<object>)(type.Data.GetValueOrDefault("Array"))! ?? throw new Exception("Invalid Array");
+                        if (type.Type != ValueTypes.String) type.Type = ValueTypes.String;
+                        value = arrayData[Random.Shared.Next(arrayData.Count)];
+                        break;
+                    case GenerationTypes.Increment:
+                        int StartVal = Convert.ToInt32(type.Data.GetValueOrDefault("Start"));
+                        int Step = Convert.ToInt32(type.Data.GetValueOrDefault("Step"));
+                        value = (StartVal + (counter * Step));
+                        break;
+                    case GenerationTypes.Boolean:
+                        bool data = Random.Shared.Next(2) == 0;
+                        value = data;
+                        break;
+                    case GenerationTypes.Formula:
+                        //Добавить проверку на ValueTypes 
+                        //Парсинг строки кода JS из Data["Formula"]
+                        value = type.GetFormulaOutput();
+                        break;
+                    default: throw new Exception("Invalid Generation Type");
+                }
+            }
+            catch (Exception ex)
+            {
+                //Вывести ошибку в поле. В будущем заменить на логгирование.
+                Debug.WriteLine(ex.Message);
+                value = "invalid";
+            }
+
             return value;
         }
     }

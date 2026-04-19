@@ -18,7 +18,8 @@
     </Design.DataContext>
 
     <Grid RowDefinitions="Auto, *, *, Auto, Auto" ColumnDefinitions="*, 3*"
-          RowSpacing="3" ColumnSpacing="5">
+          RowSpacing="3" ColumnSpacing="5"
+          IsEnabled="{Binding !GenerateCommand.IsRunning}">
         <!-- Верхняя панель -->
 		<DockPanel HorizontalSpacing="5">
             <TextBlock VerticalAlignment="Center" Text="Формат:"/>
@@ -108,8 +109,7 @@
             <ProgressBar Grid.Row="4" 
                      BorderBrush="Black" 
                      BorderThickness="1"
-                     CornerRadius="3"
-                     Margin="0,0,5,0"/>
+                     CornerRadius="3"/>
         </DockPanel>
         
     </Grid>

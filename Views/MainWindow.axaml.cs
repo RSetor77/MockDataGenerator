@@ -93,6 +93,7 @@ namespace MockDataGenerator.Views
                 FileFormats.TXT => "*.txt",
                 FileFormats.CSV => "*.csv",
                 FileFormats.SQL => "*.sql",
+                FileFormats.JSON => "*.JSON",
                 _ => "*.txt"
             };
 
@@ -101,6 +102,7 @@ namespace MockDataGenerator.Views
                 FileFormats.TXT => "Текстовый файл",
                 FileFormats.CSV => "Текстовый файл CSV",
                 FileFormats.SQL => "Файл запроса SQL",
+                FileFormats.JSON => "*Файл JSON",
                 _ => "Текстовый файл"
             };
 
