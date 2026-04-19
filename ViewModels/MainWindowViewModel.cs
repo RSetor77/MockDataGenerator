@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,7 +22,10 @@ namespace MockDataGenerator.ViewModels
         public event Action<OutputValueType[]?, Action<OutputValueType>>? RequestSelect;
         public event Action<GenerationOptions, Action<IStorageFile>>? RequestFilePath;
         public int RecordCount { get; set; } = 1;
-        public string? TableName { get; set; }
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(GenerateCommand))]
+        private string? _tableName;
         public bool CreateTable { get; set; } = false;
         public IEnumerable<FileFormats> Formats { get; } = Enum.GetValues<FileFormats>();
         public EncodingInfo[] Encodings { get; } = [];
@@ -70,7 +74,7 @@ namespace MockDataGenerator.ViewModels
                 if (SelectedFormat == FileFormats.SQL)
                 {
                     IsTableValid = Fields.Count > 0 && Fields.All(f => f.IsValid);
-                    IsValid = SelectedDBMSRules != null && IsTableValid && string.IsNullOrEmpty(TableName);
+                    IsValid = SelectedDBMSRules != null && IsTableValid && !string.IsNullOrEmpty(TableName);
                 } 
                 else if (SelectedFormat == FileFormats.TXT || SelectedFormat == FileFormats.CSV) 
                 {
@@ -208,15 +212,17 @@ namespace MockDataGenerator.ViewModels
 
                 CreateHeader = (SelectedFormat == FileFormats.CSV) && CreateHeader,
                 BOM = UseBOM,
-                Separator = (SelectedFormat != FileFormats.SQL) ? TxtSeparator?[0] ?? ';' : ','
+                Separator = !string.IsNullOrEmpty(TxtSeparator) ? TxtSeparator[0] : ';'
             };
 
-            RequestFilePath?.Invoke(options, result =>
+            RequestFilePath?.Invoke(options, async result =>
             {
-                filePath = result.TryGetLocalPath();
+                if (result == null)
+                    return;
+                string? filePath = result.TryGetLocalPath();
                 if (filePath != null)
                 {
-                    Console.WriteLine(filePath);
+                    await GenerationService.GenerateFile([.. Fields], result, options);
                 }
             });
         }

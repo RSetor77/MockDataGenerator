@@ -1,7 +1,9 @@
 ﻿using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using Jint;
 using MockDataGenerator.Models;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -15,44 +17,106 @@ namespace MockDataGenerator.Services
     {
         public static async Task GenerateFile(Field[] fields, IStorageFile file, GenerationOptions options)
         {
-            await using var stream = await file.OpenReadAsync();
-            await using var writer = new StreamWriter(stream, options.Encoding);
+            await using var stream = await file.OpenWriteAsync();
+
+
             switch (options.Format)
             {
+                case FileFormats.TXT:
+                    await GenerateTXT(stream, fields, options);
+                    break;
                 case FileFormats.CSV:
-                    if (options.CreateHeader) await WriteHeader(writer, fields, options.Separator);
+                    await GenerateCSV(stream, fields, options);
                     break;
                 case FileFormats.SQL:
-                    if (options.CreateTable) await AddCreateTableQuery(writer, fields, options.DBMS!, options.TableName!);
+                    await GenerateSQL(stream, fields, options);
                     break;
 
             }
-            if (options.Format == FileFormats.SQL && options.DBMS!.CompactInsert)
-                await AddInsertValuesQueryHeader(writer, fields, options.DBMS!, options.TableName!);
-            
-            
-            for(ushort i=0;i<options.RecordsCount;i++)
+        }
+
+        public static async Task GenerateTXT(Stream stream, Field[] fields, GenerationOptions options)
+        {
+            await using var writer = new StreamWriter(stream, options.Encoding);
+
+            for (ushort i = 0; i < options.RecordsCount; i++)
             {
-                if (options.Format == FileFormats.SQL)
+                //Генерируем данные
+                for (ushort j = 0; j < fields.Length; j++)
                 {
-                    if(!options.DBMS!.CompactInsert)
-                        await AddInsertValuesQueryStart(writer, fields, options.DBMS!, options.TableName!);
-                    else await writer.WriteAsync("(");
+                    await writer.WriteAsync(GenerateData(fields[j].OutputValueType!, fields[j].Blank, i, null!));
+                    if (j + 1 < fields.Length)
+                        await writer.WriteAsync(options.Separator);
                 }
+                await writer.WriteLineAsync(string.Empty);
+            }
+        }
+
+        public static async Task GenerateCSV(Stream stream, Field[] fields, GenerationOptions options)
+        {
+            await using var writer = new StreamWriter(stream, options.Encoding);
+
+            if (options.CreateHeader) await WriteHeader(writer, fields, options.Separator);
+
+            for (ushort i = 0; i < options.RecordsCount; i++)
+            {
+                //Генерируем данные
+                for (ushort j = 0; j < fields.Length; j++)
+                {
+                    string rawData = GenerateData(fields[j].OutputValueType!, fields[j].Blank, i, null!);
+
+                    if (!rawData.Equals("Null", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (fields[j].OutputValueType!.Type == ValueTypes.String)
+                        {
+                            string formattedData = $"\"{rawData.Replace("\"", "\"\"")}\"";
+
+                            await writer.WriteAsync(formattedData);
+                        }
+                        else await writer.WriteAsync(rawData);
+                        
+                    }
+
+                    if (j + 1 < fields.Length)
+                        await writer.WriteAsync(options.Separator);
+                }
+                await writer.WriteLineAsync(string.Empty);
+            }
+        }
+
+        public static async Task GenerateSQL(Stream stream, Field[] fields, GenerationOptions options)
+        {
+            await using var writer = new StreamWriter(stream, options.Encoding);
+
+            if (options.CreateTable) await AddCreateTableQuery(writer, fields, options.DBMS!, options.TableName!);
+
+            if (options.DBMS!.CompactInsert) await AddInsertValuesQueryHeader(writer, fields, options.DBMS!, options.TableName!);
+
+            for (ushort i = 0; i < options.RecordsCount; i++)
+            {
+                if (!options.DBMS!.CompactInsert) await AddInsertValuesQueryStart(writer, fields, options.DBMS!, options.TableName!);
+                else await writer.WriteAsync("(");
 
                 //Генерируем данные
-                for(ushort j=0;j<fields.Length;j++)
+                for (ushort j = 0; j < fields.Length; j++)
                 {
-                    //await GenerateData(writer);
-                    if (j + 1 < fields.Length)
-                        await writer.WriteAsync(options.Format == FileFormats.SQL ? ',' : options.Separator);
+                    string rawData = GenerateData(fields[j].OutputValueType!, fields[j].Blank, i, options.DBMS!);
+
+                    if (fields[j].OutputValueType!.Type == ValueTypes.String && !rawData.Equals("NULL", StringComparison.OrdinalIgnoreCase))
+                    {
+                        char quote = options.DBMS!.StringChar;
+                        string formattedData = $"{quote}{rawData.Replace(quote.ToString(), new string(quote, 2))}{quote}";
+
+                        await writer.WriteAsync(formattedData);
+                    }
+                    else await writer.WriteAsync(rawData);
+
+
+                    if (j + 1 < fields.Length) await writer.WriteAsync(',');
                 }
-                if (options.Format == FileFormats.SQL)
-                {
-                    if (i < options.RecordsCount - 1)
-                        await writer.WriteLineAsync(options.DBMS!.CompactInsert ? ")," : ");");
-                    else await writer.WriteLineAsync(");");
-                } else await writer.WriteLineAsync(string.Empty);
+
+                if (i < options.RecordsCount - 1) await writer.WriteLineAsync(options.DBMS!.CompactInsert ? ")," : ");");
+                else await writer.WriteLineAsync(");");
             }
         }
 
@@ -82,7 +146,7 @@ namespace MockDataGenerator.Services
                     ValueTypes.Custom => rules.DataFormats.GetValueOrDefault(fields[i].OutputValueType!.CustomTypeKey ?? "String", DBMSRules.SystemDefaults["String"]),
                     _ => throw new ArgumentOutOfRangeException(nameof(fields), "Неизвестный тип данных")
                 };
-                string fieldString = $"\t{rules.NameQuoteChar}{fields[i].Name}{rules.NameQuoteChar} {formattedType}";
+                string fieldString = $"\t{rules.NameQuoteOpen}{fields[i].Name}{rules.NameQuoteClose} {formattedType}";
 
                 //Ограничения
 
@@ -100,7 +164,7 @@ namespace MockDataGenerator.Services
             await writer.WriteAsync($"INSERT INTO {TableName}(");
             for (ushort i = 0; i < fields.Length; i++)
             {
-                string fieldName = $"{rules.NameQuoteChar}{fields[i].Name}{rules.NameQuoteChar}";
+                string fieldName = $"{rules.NameQuoteOpen}{fields[i].Name}{rules.NameQuoteClose}";
                 if (i + 1 < fields.Length)
                     fieldName += ",";
                 await writer.WriteAsync(fieldName);
@@ -113,7 +177,7 @@ namespace MockDataGenerator.Services
             await writer.WriteAsync($"INSERT INTO {TableName}(");
             for(ushort i = 0; i < fields.Length; i++)
             {
-                string fieldName = $"{rules.NameQuoteChar}{fields[i].Name}{rules.NameQuoteChar}";
+                string fieldName = $"{rules.NameQuoteOpen}{fields[i].Name}{rules.NameQuoteClose}";
                 if (i + 1 < fields.Length)
                     fieldName += ",";
                 await writer.WriteAsync(fieldName);
@@ -123,7 +187,7 @@ namespace MockDataGenerator.Services
 
         private static string GenerateData(OutputValueType type, int BlankChance, ushort counter, DBMSRules rules)
         {
-            string value = string.Empty;
+            string value;
             if (BlankChance > 0)
             {
                 bool isBlank = Random.Shared.NextSingle() < (Convert.ToSingle(BlankChance) / 100);
@@ -153,9 +217,9 @@ namespace MockDataGenerator.Services
                         } else throw new Exception("Invalid Parameters");
                         break;
                     case GenerationTypes.Array:
-                        string[] arrayData = (string[]?)(type.Data.GetValueOrDefault("Array")) ?? throw new Exception("Invalid Array");
+                        var arrayData = (List<object>)(type.Data.GetValueOrDefault("Array"))! ?? throw new Exception("Invalid Array");
                         if (type.Type != ValueTypes.String) type.Type = ValueTypes.String;
-                        value = arrayData[Random.Shared.Next(arrayData.Length)];
+                        value = arrayData[Random.Shared.Next(arrayData.Count)].ToString()!;
                         break;
                     case GenerationTypes.Increment:
                         int StartVal = Convert.ToInt32(type.Data.GetValueOrDefault("Start"));
@@ -169,6 +233,7 @@ namespace MockDataGenerator.Services
                     case GenerationTypes.Formula:
                         //Добавить проверку на ValueTypes 
                         //Парсинг строки кода JS из Data["Formula"]
+                        value = type.GetFormulaOutput();
                         break;
                     default: throw new Exception("Invalid Generation Type");
                 }
@@ -179,12 +244,6 @@ namespace MockDataGenerator.Services
                 Console.WriteLine(ex.Message);
                 value = "'invalid'";
                 type.Type = ValueTypes.String;
-            }
-            //rules != null это значит генерируемый файл - SQL.
-            if (rules != null && type.Type == ValueTypes.String)
-            {
-                value = value.Replace("'", "''");
-                value = $"{rules.StringChar}{value}{rules.StringChar}";
             }
                 
             return value;

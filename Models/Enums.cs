@@ -10,7 +10,8 @@ namespace MockDataGenerator.Models
     {
         TXT,
         CSV,
-        SQL
+        SQL,
+        JSON
     }
 
     public enum ValueTypes

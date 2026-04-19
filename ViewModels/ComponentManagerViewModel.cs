@@ -75,15 +75,15 @@ namespace MockDataGenerator.ViewModels
 
         public async Task InitComponents()
         {
-            try
-            {
+            try { 
                 OutputValueTypes = [.. await ComponentService.GetComponentsAsync<OutputValueType>()];
-                DBMSRules = [.. await ComponentService.GetComponentsAsync<DBMSRules>()];
-            }
-            catch (Exception) { 
-                OutputValueTypes = [];
-                DBMSRules = [];
-            }
+                foreach (var component in OutputValueTypes) 
+                {
+                    if (component.GenerationType == GenerationTypes.Formula)
+                        component.Prepare();
+                }
+            } catch (Exception) { OutputValueTypes = []; };
+            try { DBMSRules = [.. await ComponentService.GetComponentsAsync<DBMSRules>()]; } catch (Exception) { DBMSRules = []; }
         }
 
         public async Task Refresh()

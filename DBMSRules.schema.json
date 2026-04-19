@@ -14,12 +14,19 @@
       "default": "'",
       "description": "Символ для обрамления строковых значений в SQL запросах."
     },
-    "NameQuoteChar": {
+    "NameQuoteOpen": {
       "type": "string",
       "minLength": 1,
       "maxLength": 1,
       "default": "'",
-      "description": "Символ для обрамления имен таблиц и столбцов."
+      "description": "Символ для обрамления имен таблиц и столбцов. Если БД имеет только один символ для открытия и закрытия строки имени, то заполните только этот параметр."
+    },
+    "NameQuoteClose": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1,
+      "default": "'",
+      "description": "Символ для обрамления имен таблиц и столбцов. Закрывающий знак."
     },
     "EncodingCodePage": {
       "type": "integer",

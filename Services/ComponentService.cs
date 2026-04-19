@@ -54,7 +54,7 @@ namespace MockDataGenerator.Services
 
             if (!File.Exists(Path.Combine(directory!.FullName, $"{Class}_template.json")))
             {
-                Dictionary<string, object> template = [];
+                Dictionary<string, object> template;
                 if (Class == "OutputValueType")
                 {
                     template = new Dictionary<string, object>
@@ -73,7 +73,8 @@ namespace MockDataGenerator.Services
                         ["$schema"] = $"./{Class}.schema.json",
                         ["DisplayName"] = "Отображаемое имя (MS SQL Server)",
                         ["StringChar"] = "'",
-                        ["NameQuoteChar"] = "\"",
+                        ["NameQuoteOpen"] = "[",
+                        ["NameQuoteClose"] = "]",
                         ["EncodingCodePage"] = 65001,
                         ["DataFormats"] = new { 
                             String = "VARCHAR(100)",
@@ -159,34 +160,6 @@ namespace MockDataGenerator.Services
             {
                 return null;
             }
-        }
-
-        public async static Task<IEnumerable<OutputValueType>> GetComponentsAsync()
-        {
-            DirectoryInfo? componentsFolder = InitComponentFolder("ValueTypes");
-
-            if (componentsFolder == null) return [];
-
-            var fileComponents = componentsFolder.GetFiles("*.json", SearchOption.TopDirectoryOnly);
-
-            if (fileComponents.Length == 0) return [];
-            //Читаем все файлы в папке
-            var tasks = fileComponents.Select(file => ReadFileAsync<OutputValueType>(file));
-            //После чтения всех файлов записываем все, что прочитали.
-            OutputValueType?[] results = await Task.WhenAll(tasks);
-
-            Dictionary<string, OutputValueType> importComponents = new(fileComponents.Length,
-                StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var component in results)
-            {
-                if (component != null)
-                {
-                    importComponents.TryAdd(component.DisplayName.Trim(), component);
-                }
-            }
-
-            return importComponents.Values;
         }
 
         public async static Task<IEnumerable<T>> GetComponentsAsync<T>()

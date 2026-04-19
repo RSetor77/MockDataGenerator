@@ -12,7 +12,16 @@ namespace MockDataGenerator.Models
     {
         public required string DisplayName { get; set; }
         public char StringChar { get; set; } = '\'';
-        public char NameQuoteChar { get; set; } = '\'';
+        public char NameQuoteOpen { get; set; } = '\'';
+
+        private char? _nameQuoteClose;
+
+        public char NameQuoteClose
+        {
+            get => _nameQuoteClose ?? NameQuoteOpen;
+            set => _nameQuoteClose = value;
+        }
+
         public int EncodingCodePage { get; set; } = 65001;
         public bool CompactInsert { get; set; }
         public required Dictionary<string, string> DataFormats { get; set; } = new(StringComparer.OrdinalIgnoreCase);

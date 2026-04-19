@@ -4,9 +4,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:models="using:MockDataGenerator.Models"
         xmlns:viewmodels="using:MockDataGenerator.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
         x:Class="MockDataGenerator.SelectWindow"
-        Title="SelectWindow"
+        Title="SelectWindow" Width="400" Height="350"
         x:DataType="viewmodels:SelectWindowViewModel">
     <Grid RowDefinitions="*, Auto">
 		<ListBox ItemsSource="{Binding ValueTypes}"
