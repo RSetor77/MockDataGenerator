@@ -177,7 +177,8 @@ namespace MockDataGenerator.Services
             {
                 //Вывести ошибку в поле. Пока что WriteLine, но это будет изменено.
                 Console.WriteLine(ex.Message);
-                value = "invalid";
+                value = "'invalid'";
+                type.Type = ValueTypes.String;
             }
             //rules != null это значит генерируемый файл - SQL.
             if (rules != null && type.Type == ValueTypes.String)
