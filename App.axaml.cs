@@ -20,6 +20,8 @@ namespace MockDataGenerator
         public override void OnFrameworkInitializationCompleted()
         {
             ComponentService.InitComponentFolders();
+            ComponentService.InitComponentSchemaTemplate("OutputValueType");
+            ComponentService.InitComponentSchemaTemplate("DBMSRules");
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {

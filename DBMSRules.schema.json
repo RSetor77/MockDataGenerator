@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org",
+  "title": "DBMS Rules Configuration",
+  "type": "object",
+  "properties": {
+    "DisplayName": {
+      "type": "string",
+      "description": "Название набора правил СУБД (например, 'PostgreSQL' или 'MySQL')."
+    },
+    "StringChar": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1,
+      "default": "'",
+      "description": "Символ для обрамления строковых значений в SQL запросах."
+    },
+    "NameQuoteChar": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1,
+      "default": "'",
+      "description": "Символ для обрамления имен таблиц и столбцов."
+    },
+    "EncodingCodePage": {
+      "type": "integer",
+      "default": 65001,
+      "minimum": 0,
+      "description": "Кодовая страница кодировки (например, 65001 для UTF-8)."
+    },
+    "CompactInsert": {
+      "type": "boolean",
+      "default": false,
+      "description": "Использовать ли компактный вид INSERT (одна команда на несколько строк данных)."
+    },
+    "DataFormats": {
+      "type": "object",
+      "description": "Форматы типов данных. Вы можете переопределить стандартные (String, Number, Decimal, Boolean) или добавить свои.",
+      "properties": {
+        "String": {
+          "type": "string",
+          "default": "VARCHAR(MAX)"
+        },
+        "Number": {
+          "type": "string",
+          "default": "INT"
+        },
+        "Decimal": {
+          "type": "string",
+          "default": "DECIMAL"
+        },
+        "Boolean": {
+          "type": "string",
+          "default": "TINYINT"
+        }
+      },
+      "additionalProperties": {
+        "type": "string",
+        "description": "Пользовательский тип данных СУБД."
+      }
+    }
+  },
+  "required": [ "DisplayName", "DataFormats" ]
+}

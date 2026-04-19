@@ -12,6 +12,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="DBMSRules.schema.json" />
+    <None Remove="OutputValueType.schema.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="DBMSRules.schema.json" />
+    <EmbeddedResource Include="OutputValueType.schema.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.13" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.13" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.13" />

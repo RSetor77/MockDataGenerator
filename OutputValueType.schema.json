@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org",
+  "title": "Data Generation Configuration",
+  "type": "object",
+  "properties": {
+    "DisplayName": {
+      "type": "string",
+      "description": "Отображаемое имя типа значения."
+    },
+    "Type": {
+      "description": "Тип данных для форматирования вывода.",
+      "oneOf": [
+        {
+          "const": "String",
+          "description": "Оформляется как строка."
+        },
+        {
+          "const": "Integer",
+          "description": "Целое число."
+        },
+        {
+          "const": "Decimal",
+          "description": "Вещественное число."
+        },
+        {
+          "const": "Boolean",
+          "description": "Булево значение."
+        },
+        {
+          "const": "Custom",
+          "description": "Требует заполнения CustomTypeKey."
+        }
+      ]
+    },
+    "GenerationType": {
+      "description": "Алгоритм генерации значения.",
+      "oneOf": [
+        {
+          "const": "Number",
+          "description": "Случайное число в диапазоне [Min, Max]."
+        },
+        {
+          "const": "Array",
+          "description": "Случайный выбор из списка."
+        },
+        {
+          "const": "Boolean",
+          "description": "Случайное true/false."
+        },
+        {
+          "const": "Increment",
+          "description": "Последовательный счетчик."
+        },
+        {
+          "const": "Formula",
+          "description": "Генерация по строковой формуле."
+        }
+      ]
+    },
+    "Data": {
+      "type": "object",
+      "description": "Параметры для выбранного типа генерации.",
+      "properties": {
+        "Min": {
+          "type": "number",
+          "description": "Минимальное значение."
+        },
+        "Max": {
+          "type": "number",
+          "description": "Максимальное значение."
+        },
+        "Array": {
+          "type": "array",
+          "description": "Набор значений для выбора."
+        },
+        "Start": {
+          "type": "integer",
+          "default": 0,
+          "description": "Начало отсчета."
+        },
+        "Step": {
+          "type": "integer",
+          "default": 1,
+          "description": "Шаг инкремента."
+        },
+        "Formula": {
+          "type": "string",
+          "description": "Выражение формулы."
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "comment": "Логическая проверка: Max должен быть больше или равен Min",
+          "if": {
+            "required": [ "Min", "Max" ],
+            "properties": {
+              "Min": { "type": "number" },
+              "Max": { "type": "number" }
+            }
+          },
+          "then": {
+            "properties": {
+              "Max": { "minimum": { "$data": "1/Min" } }
+            }
+          }
+        }
+      ]
+    },
+    "CustomTypeKey": {
+      "type": "string",
+      "description": "Ключ для пользовательского типа (обязателен, если Type = Custom)."
+    }
+  },
+  "required": [ "DisplayName", "Type", "GenerationType", "Data" ],
+  "allOf": [
+    {
+      "if": { "properties": { "Type": { "const": "Custom" } } },
+      "then": { "required": [ "CustomTypeKey" ] }
+    },
+    {
+      "if": { "properties": { "GenerationType": { "const": "Number" } } },
+      "then": { "properties": { "Data": { "required": [ "Min", "Max" ] } } }
+    },
+    {
+      "if": { "properties": { "GenerationType": { "const": "Array" } } },
+      "then": { "properties": { "Data": { "required": [ "Array" ] } } }
+    },
+    {
+      "if": { "properties": { "GenerationType": { "const": "Increment" } } },
+      "then": { "properties": { "Data": { "required": [ "Start", "Step" ] } } }
+    },
+    {
+      "if": { "properties": { "GenerationType": { "const": "Formula" } } },
+      "then": { "properties": { "Data": { "required": [ "Formula" ] } } }
+    }
+  ]
+}
