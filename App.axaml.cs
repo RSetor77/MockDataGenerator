@@ -7,6 +7,7 @@ using MockDataGenerator.Services;
 using MockDataGenerator.ViewModels;
 using MockDataGenerator.Views;
 using System.Linq;
+using System.Text;
 
 namespace MockDataGenerator
 {
@@ -20,6 +21,9 @@ namespace MockDataGenerator
         public override void OnFrameworkInitializationCompleted()
         {
             ComponentService.InitComponentFolders();
+            ComponentService.InitComponentSchemaTemplate("OutputValueType");
+            ComponentService.InitComponentSchemaTemplate("DBMSRules");
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {

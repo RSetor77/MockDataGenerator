@@ -58,12 +58,16 @@
                                      Grid.Column="1"
                                      Text="{Binding OutputValueType.DisplayName}"> <!--Привязать сюда тип предмета-->
 								<TextBox.InnerRightContent>
-									<Button Content="..."
+                                    <Grid ColumnDefinitions="Auto, Auto">
+										<Button Content="..."
                                             Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).SelectOVT}"
                                             CommandParameter="{Binding}"/>
-                                            <!--Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).SelectOutputValueTypeCommand}"
-                                            CommandParameter="{Binding OutputValueType}"/ 
-                                            Click="SelectOutputValueType_Click"-->
+                                        <Button Content="x" Grid.Column="1"
+                                            Command="{Binding ClearOVTCommand}"
+                                            CommandParameter="{Binding}"/>
+                                    </Grid>
+									
+                                    
                                 </TextBox.InnerRightContent>
                                 <TextBox.Styles>
                                     <Style Selector="TextBox /template/ TextPresenter">
@@ -72,7 +76,7 @@
                                 </TextBox.Styles>
                             </TextBox>
                             <NumericUpDown Watermark="% пустых" 
-                                           Minimum="0" 
+                                           Minimum="0" Maximum="100"
                                            Increment="1"
                                            Grid.Column="2"
                                            Value="{Binding Blank}"/>

@@ -24,10 +24,10 @@ namespace MockDataGenerator.ViewModels
         public string? TableName { get; set; }
         public bool CreateTable { get; set; } = false;
         public IEnumerable<FileFormats> Formats { get; } = Enum.GetValues<FileFormats>();
-        public EncodingInfo[] Encodings { get; } = Encoding.GetEncodings();
+        public EncodingInfo[] Encodings { get; } = [];
         public ObservableCollection<Field> Fields { get; set; } = [];
         public OutputValueType[]? OutputValueTypes { get; set; }
-        public DBMSRules[]? DBMSRules { get; set; }
+        public ObservableCollection<DBMSRules> DBMSRules { get; set; } = [];
         public bool CanAdd => Fields.Count < 1000;
         public string? TxtSeparator { get; set; }
         public bool CreateHeader { get; set; }
@@ -48,6 +48,19 @@ namespace MockDataGenerator.ViewModels
         public bool IsSQLSelected => SelectedFormat == FileFormats.SQL;
         public bool IsTextSelected => SelectedFormat == FileFormats.CSV || SelectedFormat == FileFormats.TXT;
         public bool IsCSVSelected => SelectedFormat == FileFormats.CSV;
+
+        private IEnumerable<EncodingInfo> encodings
+        {
+            get
+            {
+                var all = Encoding.GetEncodings();
+                int[] priorityCodes = { 65001, 1251, 1200, 866 };
+                var popular = all.Where(e => priorityCodes.Contains(e.CodePage)).OrderBy(e => Array.IndexOf(priorityCodes, e.CodePage));
+                var others = all.Where(e => !priorityCodes.Contains(e.CodePage)).OrderBy(e => e.CodePage);
+                var final = popular.Select(e => e).Concat(others.Select(e => e)).ToList();
+                return [..final];
+            }
+        }
 
         private bool CanGenerate
         {
@@ -117,7 +130,7 @@ namespace MockDataGenerator.ViewModels
                 NotifyCommands();
             };
 
-            
+            Encodings = [..encodings];
         }
 
         public void OpenComponentManager()
@@ -125,7 +138,11 @@ namespace MockDataGenerator.ViewModels
             RequestComponents?.Invoke(result =>
             {
                 OutputValueTypes = result.OutputValueTypes;
-                DBMSRules = result.DBMSRules;
+                DBMSRules.Clear();
+                foreach(DBMSRules rule in result.DBMSRules)
+                {
+                    DBMSRules.Add(rule);
+                }
             });
         }
 

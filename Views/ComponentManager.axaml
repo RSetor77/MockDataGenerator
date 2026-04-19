@@ -9,17 +9,30 @@
         x:Class="MockDataGenerator.ComponentManager"
         Title="Менеджер компонентов"
         x:DataType="vm:ComponentManagerViewModel">
-  <Grid RowDefinitions="Auto, *, Auto">
-      <Grid ColumnDefinitions="*, Auto">
+  <Grid RowDefinitions="Auto, Auto, *, Auto">
+      <TabStrip Padding="0"
+                SelectedIndex="{Binding CurrentTab}">
+          <TabStrip.Styles>
+            <Style Selector="TabStripItem">
+               <Setter Property="MinHeight" Value="0"/>
+               <Setter Property="Padding" Value="10,4"/>
+               <Setter Property="Margin" Value="0"/>
+            </Style>
+          </TabStrip.Styles>
+          <TabStripItem>Типы значений</TabStripItem>
+          <TabStripItem>СУБД</TabStripItem>
+      </TabStrip>
+      <Grid ColumnDefinitions="*, Auto"
+            Grid.Row="1">
 		  <TextBox Watermark="Поиск"/>
           <Button Grid.Column="1" Content="Найти"/>
       </Grid>
-      <ListBox Grid.Row="1"
-               ItemsSource="{Binding OutputValueTypes}"
+      <ListBox Grid.Row="2"
+               ItemsSource="{Binding ComponentList}"
                SelectionMode="Multiple"
-               Selection="{Binding OVTSelection}"> <!--Список компонентов-->
-		  <ListBox.ItemTemplate>
-					<DataTemplate DataType="models:OutputValueType">
+               Selection="{Binding Selection}"> <!--Список компонентов-->
+		  <ListBox.DataTemplates>
+					<DataTemplate DataType="models:OutputValueType" x:DataType="models:OutputValueType">
                         <Grid ColumnDefinitions="Auto, 2*, *">
                             <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}"
                                       Margin="5,0"/>
@@ -29,9 +42,18 @@
                                        Grid.Column="2"/> <!--Тип компонента [СУБД | Тип значения]-->
                         </Grid>
                     </DataTemplate>
-          </ListBox.ItemTemplate>
+
+              <DataTemplate DataType="models:DBMSRules" x:DataType="models:DBMSRules">
+                        <Grid ColumnDefinitions="Auto, 2*, *">
+                            <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}"
+                                      Margin="5,0"/>
+                            <TextBlock Text="{Binding DisplayName}"
+                                       Grid.Column="1"/> <!--Имя компонента-->
+                        </Grid>
+                    </DataTemplate>
+          </ListBox.DataTemplates>
       </ListBox>
-	  <Grid Grid.Row="2" ColumnSpacing="5"
+	  <Grid Grid.Row="3" ColumnSpacing="5"
             ColumnDefinitions="Auto, Auto, *">
 		  <Button Command="{Binding Refresh}">
 			  Синхронизировать

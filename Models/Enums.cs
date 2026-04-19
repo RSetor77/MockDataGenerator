@@ -18,7 +18,8 @@ namespace MockDataGenerator.Models
         String,
         Integer,
         Decimal,
-        Boolean
+        Boolean,
+        Custom
     }
 
     public enum GenerationTypes

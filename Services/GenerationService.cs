@@ -1,4 +1,5 @@
-﻿using Avalonia.Platform.Storage;
+﻿using Avalonia.Input;
+using Avalonia.Platform.Storage;
 using MockDataGenerator.Models;
 using System;
 using System.Collections.Generic;
@@ -74,10 +75,11 @@ namespace MockDataGenerator.Services
             {
                 string formattedType = fields[i].OutputValueType!.Type switch
                 {
-                    ValueTypes.Integer => rules.DataFormats["Number"],
-                    ValueTypes.String => rules.DataFormats["String"],
-                    ValueTypes.Decimal => rules.DataFormats["Decimal"],
-                    ValueTypes.Boolean => rules.DataFormats["Boolean"],
+                    ValueTypes.Integer => rules.DataFormats.GetValueOrDefault("Number", DBMSRules.SystemDefaults["Number"]),
+                    ValueTypes.String => rules.DataFormats.GetValueOrDefault("String", DBMSRules.SystemDefaults["String"]),
+                    ValueTypes.Decimal => rules.DataFormats.GetValueOrDefault("Decimal", DBMSRules.SystemDefaults["Decimal"]),
+                    ValueTypes.Boolean => rules.DataFormats.GetValueOrDefault("Boolean", DBMSRules.SystemDefaults["Boolean"]),
+                    ValueTypes.Custom => rules.DataFormats.GetValueOrDefault(fields[i].OutputValueType!.CustomTypeKey ?? "String", DBMSRules.SystemDefaults["String"]),
                     _ => throw new ArgumentOutOfRangeException(nameof(fields), "Неизвестный тип данных")
                 };
                 string fieldString = $"\t{rules.NameQuoteChar}{fields[i].Name}{rules.NameQuoteChar} {formattedType}";
@@ -152,6 +154,7 @@ namespace MockDataGenerator.Services
                         break;
                     case GenerationTypes.Array:
                         string[] arrayData = (string[]?)(type.Data.GetValueOrDefault("Array")) ?? throw new Exception("Invalid Array");
+                        if (type.Type != ValueTypes.String) type.Type = ValueTypes.String;
                         value = arrayData[Random.Shared.Next(arrayData.Length)];
                         break;
                     case GenerationTypes.Increment:
@@ -164,7 +167,8 @@ namespace MockDataGenerator.Services
                         value = data.ToString();
                         break;
                     case GenerationTypes.Formula:
-                        //Парсинг строки кода C# из Data["Formula"]
+                        //Добавить проверку на ValueTypes 
+                        //Парсинг строки кода JS из Data["Formula"]
                         break;
                     default: throw new Exception("Invalid Generation Type");
                 }
@@ -173,13 +177,14 @@ namespace MockDataGenerator.Services
             {
                 //Вывести ошибку в поле. Пока что WriteLine, но это будет изменено.
                 Console.WriteLine(ex.Message);
-                value = "invalid";
+                value = "'invalid'";
+                type.Type = ValueTypes.String;
             }
             //rules != null это значит генерируемый файл - SQL.
             if (rules != null && type.Type == ValueTypes.String)
             {
                 value = value.Replace("'", "''");
-                value = $"'{value}'";
+                value = $"{rules.StringChar}{value}{rules.StringChar}";
             }
                 
             return value;
