@@ -1,6 +1,5 @@
 ﻿using Avalonia.Input;
 using Avalonia.Platform.Storage;
-using Jint;
 using MockDataGenerator.Models;
 using System;
 using System.Collections;
@@ -9,6 +8,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -22,52 +22,42 @@ namespace MockDataGenerator.Services
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
 
+        private static readonly JsonSerializerOptions jsonLinesOptions = new()
+        {
+            WriteIndented = false,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
         public static async Task GenerateFile(Field[] fields, IStorageFile file, GenerationOptions options)
         {
             await using var stream = await file.OpenWriteAsync();
 
 
-            switch (options.Format)
+            switch (options.FormatSettings)
             {
-                case FileFormats.TXT:
+                case TXTSettings:
                     await GenerateTXT(stream, fields, options);
                     break;
-                case FileFormats.CSV:
+                case CSVSettings:
                     await GenerateCSV(stream, fields, options);
                     break;
-                case FileFormats.SQL:
+                case SQLSettings:
                     await GenerateSQL(stream, fields, options);
                     break;
-                case FileFormats.JSON:
+                case JsonSettings:
                     await GenerateJSON(stream, fields, options);
                     break;
-                default: break;
+                default:
+                    Debug.WriteLine("Попытка сгенерировать файл с неизвестными настройками.");
+                    break;
 
             }
         }
 
         public static async Task GenerateTXT(Stream stream, Field[] fields, GenerationOptions options)
         {
-            await using var writer = new StreamWriter(stream, options.Encoding);
-
-            for (ushort i = 0; i < options.RecordsCount; i++)
-            {
-                //Генерируем данные
-                for (ushort j = 0; j < fields.Length; j++)
-                {
-                    await writer.WriteAsync(GenerateDataString(fields[j].OutputValueType!, fields[j].Blank, i));
-                    if (j + 1 < fields.Length)
-                        await writer.WriteAsync(options.Separator);
-                }
-                await writer.WriteLineAsync(string.Empty);
-            }
-        }
-
-        public static async Task GenerateCSV(Stream stream, Field[] fields, GenerationOptions options)
-        {
-            await using var writer = new StreamWriter(stream, options.Encoding);
-
-            if (options.CreateHeader) await WriteHeader(writer, fields, options.Separator);
+            TXTSettings settings = (TXTSettings)options.FormatSettings;
+            await using var writer = new StreamWriter(stream, settings.Encoding);
 
             for (ushort i = 0; i < options.RecordsCount; i++)
             {
@@ -75,6 +65,30 @@ namespace MockDataGenerator.Services
                 for (ushort j = 0; j < fields.Length; j++)
                 {
                     string rawData = GenerateDataString(fields[j].OutputValueType!, fields[j].Blank, i);
+                    if (rawData == "Undefined") continue;
+                    await writer.WriteAsync(rawData);
+                    if (j + 1 < fields.Length)
+                        await writer.WriteAsync(settings.Separator);
+                }
+                await writer.WriteLineAsync(string.Empty);
+            }
+        }
+
+        public static async Task GenerateCSV(Stream stream, Field[] fields, GenerationOptions options)
+        {
+            CSVSettings settings = (CSVSettings)options.FormatSettings;
+            await using var writer = new StreamWriter(stream, settings.Encoding);
+
+            if (settings.CreateHeader) await WriteHeader(writer, fields, settings.Separator);
+
+            for (ushort i = 0; i < options.RecordsCount; i++)
+            {
+                //Генерируем данные
+                for (ushort j = 0; j < fields.Length; j++)
+                {
+                    string rawData = GenerateDataString(fields[j].OutputValueType!, fields[j].Blank, i);
+
+                    if (rawData == "Undefined") continue;
 
                     if (!rawData.Equals("Null", StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -89,7 +103,7 @@ namespace MockDataGenerator.Services
                     }
 
                     if (j + 1 < fields.Length)
-                        await writer.WriteAsync(options.Separator);
+                        await writer.WriteAsync(settings.Separator);
                 }
                 await writer.WriteLineAsync(string.Empty);
             }
@@ -97,15 +111,16 @@ namespace MockDataGenerator.Services
 
         public static async Task GenerateSQL(Stream stream, Field[] fields, GenerationOptions options)
         {
-            await using var writer = new StreamWriter(stream, options.Encoding);
+            SQLSettings settings = (SQLSettings)options.FormatSettings;
+            await using var writer = new StreamWriter(stream, settings.Encoding);
 
-            if (options.CreateTable) await AddCreateTableQuery(writer, fields, options.DBMS!, options.TableName!);
+            if (settings.CreateTable) await AddCreateTableQuery(writer, fields, settings.DBMS!, settings.TableName!);
 
-            if (options.DBMS!.CompactInsert) await AddInsertValuesQueryHeader(writer, fields, options.DBMS!, options.TableName!);
+            if (settings.DBMS!.CompactInsert) await AddInsertValuesQueryHeader(writer, fields, settings.DBMS!, settings.TableName!);
 
             for (ushort i = 0; i < options.RecordsCount; i++)
             {
-                if (!options.DBMS!.CompactInsert) await AddInsertValuesQueryStart(writer, fields, options.DBMS!, options.TableName!);
+                if (!settings.DBMS!.CompactInsert) await AddInsertValuesQueryStart(writer, fields, settings.DBMS!, settings.TableName!);
                 else await writer.WriteAsync("(");
 
                 //Генерируем данные
@@ -113,9 +128,11 @@ namespace MockDataGenerator.Services
                 {
                     string rawData = GenerateDataString(fields[j].OutputValueType!, fields[j].Blank, i);
 
+                    if (rawData == "Undefined") continue;
+
                     if ((fields[j].OutputValueType!.Type == ValueTypes.String || fields[j].OutputValueType!.Type == ValueTypes.QuotedCustom) && !rawData.Equals("NULL", StringComparison.OrdinalIgnoreCase))
                     {
-                        char quote = options.DBMS!.StringChar;
+                        char quote = settings.DBMS!.StringChar;
                         string formattedData = $"{quote}{rawData.Replace(quote.ToString(), new string(quote, 2))}{quote}";
 
                         await writer.WriteAsync(formattedData);
@@ -126,25 +143,50 @@ namespace MockDataGenerator.Services
                     if (j + 1 < fields.Length) await writer.WriteAsync(',');
                 }
 
-                if (i < options.RecordsCount - 1) await writer.WriteLineAsync(options.DBMS!.CompactInsert ? ")," : ");");
+                if (i < options.RecordsCount - 1) await writer.WriteLineAsync(settings.DBMS!.CompactInsert ? ")," : ");");
                 else await writer.WriteLineAsync(");");
             }
         }
 
         public static async Task GenerateJSON(Stream stream, Field[] fields, GenerationOptions options)
         {
-            var objects = new List<Dictionary<string, object>>(options.RecordsCount);
-            for (ushort i=0; i<options.RecordsCount; i++)
+            JsonSettings settings = (JsonSettings)options.FormatSettings;
+            if(settings.JsonLines)
             {
-                var row = new Dictionary<string, object?>();
-                foreach(Field field in fields)
+                byte[] newLineBytes = Encoding.UTF8.GetBytes("\n");
+                for (ushort i = 0; i < options.RecordsCount; i++)
                 {
-                    object? value = GenerateDataObject(field.OutputValueType!, field.Blank, i);
-                    row.Add(field.Name!, value);
+                    var row = new Dictionary<string, object?>();
+                    foreach (Field field in fields)
+                    {
+                        object? value = GenerateDataObject(field.OutputValueType!, field.Blank, i);
+                        if (ReferenceEquals(value, Undefined.Value))
+                            continue;
+                        row.Add(field.Name!, value);
+                    }
+
+                    await JsonSerializer.SerializeAsync(stream, row, jsonLinesOptions);
+                    await stream.WriteAsync(newLineBytes);
                 }
-                objects.Add(row!);
             }
-            await JsonSerializer.SerializeAsync(stream, objects, jsonOptions);
+            else
+            {
+                var objects = new List<Dictionary<string, object?>>(options.RecordsCount);
+                for (ushort i = 0; i < options.RecordsCount; i++)
+                {
+                    var row = new Dictionary<string, object?>();
+                    foreach (Field field in fields)
+                    {
+                        object? value = GenerateDataObject(field.OutputValueType!, field.Blank, i);
+                        if (ReferenceEquals(value, Undefined.Value))
+                            continue;
+                        row.Add(field.Name!, value);
+                    }
+                    objects.Add(row);
+                }
+                await JsonSerializer.SerializeAsync(stream, objects, jsonOptions);
+            }
+            
         }
 
         private static async Task WriteHeader(StreamWriter writer, Field[] fields, char separator)
@@ -263,6 +305,9 @@ namespace MockDataGenerator.Services
                         //Парсинг строки кода JS из Data["Formula"]
                         value = type.GetFormulaOutput();
                         break;
+                    case GenerationTypes.None:
+                        value = "Undefined";
+                        break;
                     default: throw new Exception("Invalid Generation Type");
                 }
             }
@@ -324,6 +369,9 @@ namespace MockDataGenerator.Services
                         //Добавить проверку на ValueTypes 
                         //Парсинг строки кода JS из Data["Formula"]
                         value = type.GetFormulaOutput();
+                        break;
+                    case GenerationTypes.None:
+                        value = Undefined.Value;
                         break;
                     default: throw new Exception("Invalid Generation Type");
                 }

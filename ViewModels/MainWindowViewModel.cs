@@ -1,14 +1,13 @@
 ﻿using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MockDataGenerator.Interfaces;
 using MockDataGenerator.Models;
 using MockDataGenerator.Services;
-using MockDataGenerator.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,10 +16,6 @@ namespace MockDataGenerator.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
-        public event Action<Action<Components>>? RequestComponents;
-
-        public event Action<OutputValueType[]?, Action<OutputValueType>>? RequestSelect;
-        public event Action<GenerationOptions, Action<IStorageFile>>? RequestFilePath;
         public int RecordCount { get; set; } = 1;
 
         [ObservableProperty]
@@ -33,8 +28,19 @@ namespace MockDataGenerator.ViewModels
         public OutputValueType[]? OutputValueTypes { get; set; }
         public ObservableCollection<DBMSRules> DBMSRules { get; set; } = [];
         public bool CanAdd => Fields.Count < 1000;
+        private bool CanMoveUp(Field field) 
+        {
+            if (field == null) return false;
+            return Fields.IndexOf(field) > 0; 
+        } 
+        private bool CanMoveDown(Field field)
+        { //index < Fields.Count - 1
+            if (field == null) return false;
+            return Fields.IndexOf(field) < Fields.Count - 1; 
+        } 
         public string? TxtSeparator { get; set; }
         public bool CreateHeader { get; set; }
+        public bool UseJsonLines { get; set; }
 
         [ObservableProperty]
         private string? _status = "Ожидание";
@@ -45,13 +51,16 @@ namespace MockDataGenerator.ViewModels
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(GenerateCommand))]
+        [NotifyPropertyChangedFor(nameof(IsTextSelected))]
         [NotifyPropertyChangedFor(nameof(IsSQLSelected))]
         [NotifyPropertyChangedFor(nameof(IsCSVSelected))]
-        [NotifyPropertyChangedFor(nameof(IsTextSelected))]
+        [NotifyPropertyChangedFor(nameof(IsJsonSelected))]
         private FileFormats? _selectedFormat;
+
+        public bool IsTextSelected => SelectedFormat == FileFormats.TXT || SelectedFormat == FileFormats.CSV;
         public bool IsSQLSelected => SelectedFormat == FileFormats.SQL;
-        public bool IsTextSelected => SelectedFormat == FileFormats.CSV || SelectedFormat == FileFormats.TXT;
         public bool IsCSVSelected => SelectedFormat == FileFormats.CSV;
+        public bool IsJsonSelected => SelectedFormat == FileFormats.JSON;
 
         private static IEnumerable<EncodingInfo> EncodingsSorted
         {
@@ -140,23 +149,50 @@ namespace MockDataGenerator.ViewModels
             Encodings = [..EncodingsSorted];
         }
 
-        public void OpenComponentManager()
+        [RelayCommand(CanExecute = nameof(CanMoveUp))]
+        public void MoveUp(Field field)
         {
-            RequestComponents?.Invoke(result =>
+            int currentIndex = Fields.IndexOf(field);
+            if (currentIndex > 0)
             {
-                OutputValueTypes = result.OutputValueTypes;
-                DBMSRules.Clear();
-                foreach(DBMSRules rule in result.DBMSRules)
-                {
-                    DBMSRules.Add(rule);
-                }
-            });
+                // Метод Move встроен в ObservableCollection!
+                Fields.Move(currentIndex, currentIndex - 1);
+            }
+            MoveUpCommand.NotifyCanExecuteChanged();
+            MoveDownCommand.NotifyCanExecuteChanged();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanMoveDown))]
+        public void MoveDown(Field field)
+        {
+            int currentIndex = Fields.IndexOf(field);
+            if (currentIndex < Fields.Count - 1)
+            {
+                Fields.Move(currentIndex, currentIndex + 1);
+            }
+            MoveUpCommand.NotifyCanExecuteChanged();
+            MoveDownCommand.NotifyCanExecuteChanged();
+        }
+
+        public async Task OpenComponentManager()
+        {
+            Components result = await DialogService.OpenComponentManagerAsync();
+
+            OutputValueTypes = result.OutputValueTypes;
+
+            DBMSRules.Clear();
+            foreach (DBMSRules rule in result.DBMSRules)
+            {
+                DBMSRules.Add(rule);
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanAdd))]
         public void AddField()
         {
             Fields.Add(new());
+            MoveUpCommand.NotifyCanExecuteChanged();
+            MoveDownCommand.NotifyCanExecuteChanged();
         }
 
         [RelayCommand(CanExecute = nameof(CanAdd))]
@@ -167,30 +203,87 @@ namespace MockDataGenerator.ViewModels
                 byte last = Convert.ToByte(Fields.Count - 1);
                 Fields.Add(Fields[last]);
             }
+            MoveUpCommand.NotifyCanExecuteChanged();
+            MoveDownCommand.NotifyCanExecuteChanged();
         }
 
         [RelayCommand]
         public void RemoveField(Field field)
         {
             Fields.Remove(field);
+            MoveUpCommand.NotifyCanExecuteChanged();
+            MoveDownCommand.NotifyCanExecuteChanged();
         }
 
-        public void SelectOVT(Field field)
+        public async Task SelectOVT(Field field)
         {
-            RequestSelect?.Invoke(OutputValueTypes, result =>
-            {
-                field.OutputValueType = result;
-            });
+            var result = await DialogService.OpenSelectWindowAsync([..OutputValueTypes!]);
+
+            field.OutputValueType = result;
+            //RequestSelect?.Invoke(OutputValueTypes, result =>
+            //{
+            //    field.OutputValueType = result;
+            //});
         }
 
         [RelayCommand(CanExecute = nameof(CanGenerate), AllowConcurrentExecutions = false)]
         public async Task Generate()
         {
-            string? filePath = string.Empty;
-            Encoding encoding;
+            Encoding encoding = GetTargetEncoding();
+
+            IFormatSettings? formatSettings = SelectedFormat switch
+            {
+                FileFormats.TXT => new TXTSettings()
+                {
+                    Encoding = encoding,
+                    BOM = UseBOM,
+                    Separator = string.IsNullOrEmpty(TxtSeparator) ? ';' : TxtSeparator[0]
+                },
+
+                FileFormats.CSV => new CSVSettings()
+                {
+                    Encoding = encoding,
+                    BOM = UseBOM,
+                    CreateHeader = CreateHeader,
+                    Separator = string.IsNullOrEmpty(TxtSeparator) ? ';' : TxtSeparator[0]
+                },
+                FileFormats.SQL => new SQLSettings()
+                {
+                    DBMS = SelectedDBMSRules!,
+                    TableName = TableName,
+                    CreateTable = CreateTable,
+                    Encoding = encoding
+                },
+                FileFormats.JSON => new JsonSettings() { JsonLines = UseJsonLines },
+                _ => null
+            };
+
+            if (formatSettings == null)
+                return;
+
+            GenerationOptions options = new()
+            {
+                RecordsCount = Convert.ToUInt16(RecordCount),
+                Format = SelectedFormat ?? FileFormats.TXT,
+                FormatSettings = formatSettings
+            };
+
+            var result = await DialogService.SaveFileAsync(options);
+
+            if (result == null)
+                return;
+            string? filePath = result.TryGetLocalPath();
+            if (filePath != null)
+            {
+                await GenerationService.GenerateFile([.. Fields], result, options);
+            }
+        }
+
+        private Encoding GetTargetEncoding()
+        {
             if (SelectedEncoding != null)
             {
-                encoding = SelectedEncoding.CodePage switch
+                return SelectedEncoding.CodePage switch
                 {
                     65001 => new UTF8Encoding(UseBOM),
                     1200 => new UnicodeEncoding(false, UseBOM),
@@ -200,34 +293,11 @@ namespace MockDataGenerator.ViewModels
                     _ => Encoding.GetEncoding(SelectedEncoding.CodePage)
                 };
             }
-            else if (SelectedFormat == FileFormats.SQL) encoding = Encoding.GetEncoding(SelectedDBMSRules!.EncodingCodePage);
-            else encoding = Encoding.UTF8;
 
-            GenerationOptions options = new()
-            {
-                RecordsCount = Convert.ToUInt16(RecordCount),
-                Format = SelectedFormat ?? FileFormats.TXT,
-                Encoding = encoding,
+            if (SelectedFormat == FileFormats.SQL)
+                return Encoding.GetEncoding(SelectedDBMSRules!.EncodingCodePage);
 
-                DBMS = (SelectedFormat == FileFormats.SQL) ? SelectedDBMSRules : null,
-                TableName = (SelectedFormat == FileFormats.SQL) ? TableName : null,
-                CreateTable = (SelectedFormat == FileFormats.SQL) && CreateTable,
-
-                CreateHeader = (SelectedFormat == FileFormats.CSV) && CreateHeader,
-                BOM = UseBOM,
-                Separator = !string.IsNullOrEmpty(TxtSeparator) ? TxtSeparator[0] : ';'
-            };
-
-            RequestFilePath?.Invoke(options, async result =>
-            {
-                if (result == null)
-                    return;
-                string? filePath = result.TryGetLocalPath();
-                if (filePath != null)
-                {
-                    await GenerationService.GenerateFile([.. Fields], result, options);
-                }
-            });
+            return Encoding.UTF8;
         }
     }
 }

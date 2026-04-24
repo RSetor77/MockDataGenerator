@@ -26,6 +26,7 @@ namespace MockDataGenerator.Models
 
     public enum GenerationTypes
     {
+        None,
         Formula,
         Number,
         Array,

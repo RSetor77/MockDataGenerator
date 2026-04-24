@@ -20,6 +20,9 @@ namespace MockDataGenerator.Models
 
         public int Blank { get; set; } = 0;
         public Dictionary<string, int>? Options { get; set; }
+        public bool? IsPK { get; set; }
+        public bool? IsNotNull { get; set; }
+        public string? Check { get; set; }
 
         public bool IsValid 
         {

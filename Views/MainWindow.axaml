@@ -32,6 +32,9 @@
 
         <controls:SQLFileSettings Grid.Column="1" IsVisible="{Binding IsSQLSelected}"/>
         <controls:TextFileSettings Grid.Column="1" IsVisible="{Binding IsTextSelected}"/>
+        <CheckBox IsVisible="{Binding IsJsonSelected}" Grid.Column="1"
+                  IsChecked="{Binding UseJsonLines}"
+                  Content="Использовать стиль JsonLines?"/>
 		
         <!-- Список -->
 
@@ -49,14 +52,31 @@
                      Padding="0">
 				<ListBox.ItemTemplate>
 					<DataTemplate DataType="models:Field">
-                        <Grid ColumnDefinitions="1.5*, *, 120, Auto, Auto">
+                        <Grid ColumnDefinitions="Auto, 1.5*, *, 120, Auto, Auto">
+						    <!--Button Content="↑"/>
+                            <Button Content="↓" Grid.Column="1"/-->
+                            <Grid RowDefinitions="*, *">
+                                <Button Grid.Row="0" Content="↑" 
+                                        Padding="2,0" MinHeight="0"
+                                        HorizontalAlignment="Stretch" 
+                                        VerticalAlignment="Stretch"
+                                        Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).MoveUpCommand}"
+                                        CommandParameter="{Binding}"/>
+                                <Button Grid.Row="1" Content="↓" 
+                                        Padding="2,0" MinHeight="0"
+                                        HorizontalAlignment="Stretch" 
+                                        VerticalAlignment="Stretch"
+                                        Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).MoveDownCommand}"
+                                        CommandParameter="{Binding}"/>
+                            </Grid>
 							<TextBox Watermark="Введите название..."
                                      VerticalContentAlignment="Center"
-                                     Text="{Binding Name}"/> <!--Привязать сюда имя предмета--> 
+                                     Text="{Binding Name}"
+                                     Grid.Column="1"/> <!--Привязать сюда имя предмета--> 
                             <TextBox Watermark="Выберите тип..." 
                                      IsReadOnly="True"
                                      VerticalContentAlignment="Center"
-                                     Grid.Column="1"
+                                     Grid.Column="2"
                                      Text="{Binding OutputValueType.DisplayName}"> <!--Привязать сюда тип предмета-->
 								<TextBox.InnerRightContent>
                                     <Grid ColumnDefinitions="Auto, Auto">
@@ -79,14 +99,14 @@
                             <NumericUpDown Watermark="% пустых" 
                                            Minimum="0" Maximum="100"
                                            Increment="1"
-                                           Grid.Column="2"
+                                           Grid.Column="3"
                                            Value="{Binding Blank}"/>
                             <Button Content="x"
-                                    Grid.Column="3"
+                                    Grid.Column="4"
                                     Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).RemoveFieldCommand}"
                                     CommandParameter="{Binding}"/>
                             <Button Content="..."
-                                    Grid.Column="4"/>
+                                    Grid.Column="5"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
