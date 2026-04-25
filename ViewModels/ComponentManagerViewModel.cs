@@ -16,10 +16,6 @@ namespace MockDataGenerator.ViewModels
 {
     public partial class ComponentManagerViewModel : ViewModelBase
     {
-        public event Action<Components?>? RequestClose;
-
-        // Списки
-
         public ObservableCollection<IMockComponent> ComponentList { get; } = [];
         public SelectionModel<IMockComponent> Selection { get; } = new() { SingleSelect = false };
 
@@ -97,14 +93,14 @@ namespace MockDataGenerator.ViewModels
         public void OpenComponentFolder() => ComponentService.OpenComponentFolder();
 #pragma warning restore CA1822 // Метод не может быть статическим
 
-        public void ApplyAndClose()
+        public void ApplyAndClose(Window window)
         {
             if (CurrentTab == 0)
                 ComponentSelection.OutputValueTypes = [.. Selection.SelectedItems.OfType<OutputValueType>()];
             else
                 ComponentSelection.DBMSRules = [.. Selection.SelectedItems.OfType<DBMSRules>()];
 
-            RequestClose?.Invoke(ComponentSelection);
+            window.Close(ComponentSelection);
         }
     }
 }

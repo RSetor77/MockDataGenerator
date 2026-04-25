@@ -16,47 +16,28 @@ namespace MockDataGenerator.Services
     
     public static class DialogService
     {
-        public static async Task<T?> OpenModalWindow<T>() where T : class
+        public static async Task<T?> OpenDialogWindow<T>(ViewModelBase vm) where T : class
         {
             var owner = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Windows.FirstOrDefault(w => w.IsActive);
             if (owner == null)
-                return default(T);
-            var dialog = await IdentifyDialog<T>();
-
+                return default;
+            var dialog = IdentifyDialog(vm);
+            if (dialog == null) return default;
+            return await dialog.ShowDialog<T>(owner);
         }
 
-        private static async Task<Window> IdentifyDialog<T>() where T : class
+        private static Window? IdentifyDialog(ViewModelBase vm)
         {
-            Window result = typeof(T) switch
+            Window? result = vm switch
             {
-                var t when t == typeof(SelectWindowViewModel) => new SelectWindow(),
-                var t when t == typeof(ComponentManagerViewModel) => new ComponentManager(),
-                var t when t == typeof(OptionWindowViewModel) => new OptionWindow(),
-                _ => throw new NotImplementedException(),
+                SelectWindowViewModel => new SelectWindow() { DataContext = vm },
+                ComponentManagerViewModel => new ComponentManager() { DataContext = vm },
+                OptionWindowViewModel => new OptionWindow() { DataContext = vm },
+                _ => null,
             };
             return result;
         }
 
-        public static async Task<OutputValueType?> OpenSelectWindowAsync(OutputValueType[]? items)
-        {
-            var owner = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Windows.FirstOrDefault(w => w.IsActive);
-            if (owner == null)
-                return null;
-            var selectVM = new SelectWindowViewModel(items!);
-            SelectWindow select = new(selectVM) { DataContext = selectVM };
-            var result = await select.ShowDialog<OutputValueType>(owner);
-            return result;
-        }
-        public static async Task<Components> OpenComponentManagerAsync()
-        {
-            var owner = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Windows.FirstOrDefault(w => w.IsActive);
-            if (owner == null)
-                return new Components();
-            ComponentManager manager = new();
-            var result = await manager.ShowDialog<Components>(owner) ?? new Components();
-            return result;
-
-        }
         public static async Task<IStorageFile?> SaveFileAsync(GenerationOptions options)
         {
             var owner = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Windows.FirstOrDefault(w => w.IsActive);

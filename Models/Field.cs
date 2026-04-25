@@ -1,7 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MockDataGenerator.Services;
+using MockDataGenerator.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,6 +39,21 @@ namespace MockDataGenerator.Models
         public void ClearOVT()
         {
             OutputValueType = null;
+        }
+
+        
+
+        [RelayCommand]
+        public async Task UseOptions()
+        {
+            Field? result = await DialogService.OpenDialogWindow<Field>(new OptionWindowViewModel() { EditField = this });
+
+            if (result == null)
+                return;
+
+            this.IsPK = result.IsPK;
+            this.IsNotNull = result.IsNotNull;
+            this.Check = result.Check;
         }
     }
 }

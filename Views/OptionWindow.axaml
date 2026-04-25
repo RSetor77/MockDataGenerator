@@ -5,36 +5,29 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:models="using:MockDataGenerator.Models"
         xmlns:viewmodels="using:MockDataGenerator.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
+        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="100"
         x:Class="MockDataGenerator.OptionWindow"
         Title="Настройки поля" x:DataType="viewmodels:OptionWindowViewModel">
-  <Grid RowDefinitions="Auto, *">
 
-      <Grid ColumnDefinitions="*, *" RowDefinitions="*, *" RowSpacing="5">
-		  <CheckBox Content="Первичный ключ?" IsChecked="{Binding EditField.IsPK}"/>
-          <CheckBox Grid.Column="1" Content="Не пустое?"
+    <Grid RowDefinitions="*, Auto">
+        <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" RowSpacing="5"
+              VerticalAlignment="Center">
+		    <CheckBox Content="Первичный ключ?" IsChecked="{Binding EditField.IsPK}"/>
+            <CheckBox Grid.Column="1" Content="Не пустое?" HorizontalAlignment="Right"
                     IsChecked="{Binding EditField.IsNotNull}"/>
-          <Grid Grid.Row="1" Grid.ColumnSpan="2"
+            <Grid Grid.Row="1" Grid.ColumnSpan="2"
                 ColumnDefinitions="Auto, *"
                 ColumnSpacing="5">
-              <TextBlock Text="Проверка:" VerticalAlignment="Center"/> 
-              <TextBox Grid.Column="1" Text="{Binding EditField.Check}"/>
-          </Grid>
-      </Grid>
+                <TextBlock Text="Проверка:" VerticalAlignment="Center"/> 
+                <TextBox Grid.Column="1" Text="{Binding EditField.Check}"/>
+            </Grid>
 
-      <Grid RowDefinitions="Auto, *" Grid.Row="1">
-		  <TextBlock Text="{Binding EditField.OutputValueType.DisplayName}"/>
-          <ListBox Grid.Row="1" ItemsSource="{Binding Parameters}">
-              <ListBox.ItemTemplate>
-				  <DataTemplate x:DataType="models:OptionItem">
-					  <Grid ColumnDefinitions="Auto, *">
-						  <TextBlock Text="{Binding Key}"/>
-                          <TextBox Text="{Binding Value}"/>
-                      </Grid>
-                  </DataTemplate>
-              </ListBox.ItemTemplate>
-          </ListBox>
-      </Grid>
-	  
-  </Grid>
+            
+        </Grid>
+        <Button Grid.Row="2" Content="Применить"
+                HorizontalAlignment="Right"
+                Command="{Binding SelectAndCloseCommand}"
+                CommandParameter="{Binding $parent[Window]}"/>
+    </Grid>
+        
 </Window>

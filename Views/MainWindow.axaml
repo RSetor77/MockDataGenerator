@@ -81,7 +81,7 @@
 								<TextBox.InnerRightContent>
                                     <Grid ColumnDefinitions="Auto, Auto">
 										<Button Content="..."
-                                            Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).SelectOVT}"
+                                            Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).SelectOVTCommand}"
                                             CommandParameter="{Binding}"/>
                                         <Button Content="x" Grid.Column="1"
                                             Command="{Binding ClearOVTCommand}"
@@ -106,7 +106,8 @@
                                     Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).RemoveFieldCommand}"
                                     CommandParameter="{Binding}"/>
                             <Button Content="..."
-                                    Grid.Column="5"/>
+                                    Grid.Column="5"
+                                    Command="{Binding UseOptionsCommand}"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

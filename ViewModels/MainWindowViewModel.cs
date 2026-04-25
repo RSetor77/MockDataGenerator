@@ -174,9 +174,25 @@ namespace MockDataGenerator.ViewModels
             MoveDownCommand.NotifyCanExecuteChanged();
         }
 
+        [RelayCommand]
+        public async Task SelectOVT(Field field)
+        {
+            if (OutputValueTypes == null)
+                return;
+            OutputValueType? result = await DialogService.OpenDialogWindow<OutputValueType>(new SelectWindowViewModel(OutputValueTypes));
+
+            if (result == null)
+                return;
+
+            field.OutputValueType = result;
+        }
+
         public async Task OpenComponentManager()
         {
-            Components result = await DialogService.OpenComponentManagerAsync();
+            Components? result = await DialogService.OpenDialogWindow<Components>(new ComponentManagerViewModel());
+
+            if (result == null)
+                return;
 
             OutputValueTypes = result.OutputValueTypes;
 
@@ -213,17 +229,6 @@ namespace MockDataGenerator.ViewModels
             Fields.Remove(field);
             MoveUpCommand.NotifyCanExecuteChanged();
             MoveDownCommand.NotifyCanExecuteChanged();
-        }
-
-        public async Task SelectOVT(Field field)
-        {
-            var result = await DialogService.OpenSelectWindowAsync([..OutputValueTypes!]);
-
-            field.OutputValueType = result;
-            //RequestSelect?.Invoke(OutputValueTypes, result =>
-            //{
-            //    field.OutputValueType = result;
-            //});
         }
 
         [RelayCommand(CanExecute = nameof(CanGenerate), AllowConcurrentExecutions = false)]

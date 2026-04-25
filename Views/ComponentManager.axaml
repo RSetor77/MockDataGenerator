@@ -62,7 +62,8 @@
 			  Открыть в проводнике
           </Button>
           <Button Grid.Column="2" Content="Применить" HorizontalAlignment="Right"
-                  Command="{Binding ApplyAndClose}"/>
+                  Command="{Binding ApplyAndClose}"
+                  CommandParameter="{Binding $parent[Window]}"/>
       </Grid>
   </Grid>
 </Window>

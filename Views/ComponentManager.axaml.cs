@@ -9,18 +9,8 @@ namespace MockDataGenerator;
 
 public partial class ComponentManager : Window
 {
-    private readonly ComponentManagerViewModel? _viewModel;
     public ComponentManager()
     {
         InitializeComponent();
-        _viewModel = new ComponentManagerViewModel();
-        this.DataContext = _viewModel;
-
-        _viewModel.RequestClose += OnRequestClose;
-    }
-
-    private void OnRequestClose(object? output)
-    {
-        this.Close(output);
     }
 }

@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using Avalonia.Controls;
+using CommunityToolkit.Mvvm.Input;
 using MockDataGenerator.Models;
 using System;
 using System.Collections.Generic;
@@ -11,8 +12,6 @@ namespace MockDataGenerator.ViewModels
 {
     public partial class SelectWindowViewModel: ViewModelBase
     {
-        public event Action<OutputValueType?>? RequestClose;
-
         public ObservableCollection<OutputValueType> ValueTypes { get; } = [];
 
         public OutputValueType? SelectedValueType { get; set; }
@@ -31,9 +30,9 @@ namespace MockDataGenerator.ViewModels
         }
 
         [RelayCommand]
-        public void SelectAndClose()
+        public void SelectAndClose(Window window)
         {
-            RequestClose?.Invoke(SelectedValueType);
+            window.Close(SelectedValueType);
         }
     }
 }
