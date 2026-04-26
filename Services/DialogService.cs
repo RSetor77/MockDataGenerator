@@ -48,7 +48,7 @@ namespace MockDataGenerator.Services
             if (topLevel == null)
                 return null;
 
-            string format = options.Format switch
+            string filter = options.Format switch
             {
                 FileFormats.TXT => "*.txt",
                 FileFormats.CSV => "*.csv",
@@ -57,25 +57,34 @@ namespace MockDataGenerator.Services
                 _ => "*.txt"
             };
 
+            string format = options.Format switch
+            {
+                FileFormats.TXT => "txt",
+                FileFormats.CSV => "csv",
+                FileFormats.SQL => "sql",
+                FileFormats.JSON => "json",
+                _ => "txt"
+            };
+
             string formatTile = options.Format switch
             {
-                FileFormats.TXT => "Текстовый файл",
+                FileFormats.TXT => "Текстовый файл TXT",
                 FileFormats.CSV => "Текстовый файл CSV",
                 FileFormats.SQL => "Файл запроса SQL",
-                FileFormats.JSON => "*Файл JSON",
+                FileFormats.JSON => "Файл JSON",
                 _ => "Текстовый файл"
             };
 
             string fileName = options.Format switch
             {
                 FileFormats.SQL => (options.FormatSettings as SQLSettings)!.TableName!,
-                _ => "Генерация_" + DateTime.Now.ToShortDateString()
+                _ => "Генерация_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")
             };
 
             var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 Title = "Сохранить файл",
-                FileTypeChoices = [new FilePickerFileType(formatTile) { Patterns = [format] }],
+                FileTypeChoices = [new FilePickerFileType(formatTile) { Patterns = [filter] }],
                 DefaultExtension = format,
                 SuggestedFileName = fileName
             });
