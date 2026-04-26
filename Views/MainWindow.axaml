@@ -17,7 +17,7 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto, *, *, Auto, Auto" ColumnDefinitions="*, 3*"
+    <Grid RowDefinitions="Auto, *, *, Auto" ColumnDefinitions="*, 3*"
           RowSpacing="3" ColumnSpacing="5"
           IsEnabled="{Binding !GenerateCommand.IsRunning}">
         <!-- Верхняя панель -->
@@ -123,16 +123,6 @@
         <DockPanel Grid.Row="3" Grid.Column="1" HorizontalSpacing="5" Margin="0,0,5,0">
 	        <Button Content="Менеджер компонентов" Command="{Binding OpenComponentManager}"/>
             <Button Content="Сгенерировать" Command="{Binding GenerateCommand}"/>
-        </DockPanel>
-        <DockPanel Grid.Row="4" Grid.ColumnSpan="2" HorizontalSpacing="5">
-            <TextBlock Text="Статус: "/>
-            <TextBlock Text="{Binding Status}"/>
-            <Separator/>
-            <TextBlock Text="Процесс:"/>
-            <ProgressBar Grid.Row="4" 
-                     BorderBrush="Black" 
-                     BorderThickness="1"
-                     CornerRadius="3"/>
         </DockPanel>
         
     </Grid>

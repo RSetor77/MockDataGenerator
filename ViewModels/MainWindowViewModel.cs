@@ -44,9 +44,6 @@ namespace MockDataGenerator.ViewModels
         public bool UseJsonLines { get; set; }
 
         [ObservableProperty]
-        private string? _status = "Ожидание";
-
-        [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(GenerateCommand))]
         public DBMSRules? _selectedDBMSRules;
 
