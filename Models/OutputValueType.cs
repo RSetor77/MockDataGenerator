@@ -20,6 +20,7 @@ namespace MockDataGenerator.Models
         public required GenerationTypes GenerationType { get; set; }
         public required Dictionary<string, object> Data { get; set; }
         public string? CustomTypeKey { get; set; }
+
         [JsonIgnore]
         private Func<string>? _compiledFormula;
         public void Prepare()

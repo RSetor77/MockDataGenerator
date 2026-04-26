@@ -23,15 +23,29 @@ namespace MockDataGenerator.Models
 
         public int Blank { get; set; } = 0;
         public Dictionary<string, int>? Options { get; set; }
-        public bool? IsPK { get; set; }
-        public bool? IsNotNull { get; set; }
-        public string? Check { get; set; }
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsNullable))]
+        private bool _isPK = false;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsNullable))]
+        private bool _isNotNull = false;
+        public string Check { get; set; } = "";
 
         public bool IsValid 
         {
             get
             {
-                return Name != null && OutputValueType != null;
+                return !string.IsNullOrEmpty(Name) && OutputValueType != null;
+            }
+        }
+
+        public bool IsNullable
+        {
+            get
+            {
+                return !IsPK && !IsNotNull;
             }
         }
 

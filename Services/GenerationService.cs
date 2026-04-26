@@ -126,7 +126,7 @@ namespace MockDataGenerator.Services
                 //Генерируем данные
                 for (ushort j = 0; j < fields.Length; j++)
                 {
-                    string rawData = GenerateDataString(fields[j].OutputValueType!, fields[j].Blank, i);
+                    string rawData = GenerateDataString(fields[j].OutputValueType!, fields[j].IsNullable ? fields[j].Blank : 0, i);
 
                     if (rawData == "Undefined") continue;
 
@@ -218,7 +218,14 @@ namespace MockDataGenerator.Services
                 };
                 string fieldString = $"\t{rules.NameQuoteOpen}{fields[i].Name}{rules.NameQuoteClose} {formattedType}";
 
-                //Ограничения
+                if (fields[i].IsPK)
+                    fieldString = $"{fieldString} PRIMARY KEY";
+
+                if(!fields[i].IsPK && fields[i].IsNotNull)
+                    fieldString = $"{fieldString} NOT NULL";
+
+                if (!string.IsNullOrEmpty(fields[i].Check))
+                    fieldString = $"{fieldString} CHECK({fields[i].Check})";
 
                 if ((i + 1) < fields.Length)
                     fieldString += ',';
@@ -234,6 +241,8 @@ namespace MockDataGenerator.Services
             await writer.WriteAsync($"INSERT INTO {TableName}(");
             for (ushort i = 0; i < fields.Length; i++)
             {
+                if (fields[i].OutputValueType!.GenerationType == GenerationTypes.None)
+                    continue;
                 string fieldName = $"{rules.NameQuoteOpen}{fields[i].Name}{rules.NameQuoteClose}";
                 if (i + 1 < fields.Length)
                     fieldName += ",";
@@ -247,6 +256,8 @@ namespace MockDataGenerator.Services
             await writer.WriteAsync($"INSERT INTO {TableName}(");
             for(ushort i = 0; i < fields.Length; i++)
             {
+                if (fields[i].OutputValueType!.GenerationType == GenerationTypes.None)
+                    continue;
                 string fieldName = $"{rules.NameQuoteOpen}{fields[i].Name}{rules.NameQuoteClose}";
                 if (i + 1 < fields.Length)
                     fieldName += ",";

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,6 +57,18 @@ namespace MockDataGenerator.ViewModels
         [NotifyPropertyChangedFor(nameof(IsCSVSelected))]
         [NotifyPropertyChangedFor(nameof(IsJsonSelected))]
         private FileFormats? _selectedFormat;
+
+        partial void OnSelectedFormatChanged(FileFormats? value)
+        {
+            foreach(var field in Fields)
+            {
+                if ((field.IsPK || field.IsNotNull) && value != FileFormats.SQL)
+                {
+                    field.IsPK = false;
+                    field.IsNotNull = false;
+                }
+            }
+        }
 
         public bool IsTextSelected => SelectedFormat == FileFormats.TXT || SelectedFormat == FileFormats.CSV;
         public bool IsSQLSelected => SelectedFormat == FileFormats.SQL;
