@@ -61,12 +61,14 @@ namespace MockDataGenerator.Models
 
             }
         }
-        public string GetFormulaOutput()
+        public string GetFormulaOutput(FormulaEnviroment? env)
         {
             if (GenerationType == GenerationTypes.Formula && _compiledFormula != null)
+            {
+                FormulaService.engine.SetValue("env", env);
                 return _compiledFormula.Invoke();
-            else
-                return string.Empty;
+            }
+            else return string.Empty;
         }
     }
 }

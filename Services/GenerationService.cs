@@ -64,7 +64,7 @@ namespace MockDataGenerator.Services
                 //Генерируем данные
                 for (ushort j = 0; j < fields.Length; j++)
                 {
-                    string rawData = GenerateDataString(fields[j].OutputValueType!, fields[j].Blank, i);
+                    string rawData = GenerateDataString(fields[j].OutputValueType!, new() { Index = i, Iteration = j }, fields[j].Blank);
                     if (rawData == "Undefined") continue;
                     await writer.WriteAsync(rawData);
                     if (j + 1 < fields.Length)
@@ -86,7 +86,7 @@ namespace MockDataGenerator.Services
                 //Генерируем данные
                 for (ushort j = 0; j < fields.Length; j++)
                 {
-                    string rawData = GenerateDataString(fields[j].OutputValueType!, fields[j].Blank, i);
+                    string rawData = GenerateDataString(fields[j].OutputValueType!, new() { Index = i, Iteration = j }, fields[j].Blank);
 
                     if (rawData == "Undefined") continue;
 
@@ -126,7 +126,7 @@ namespace MockDataGenerator.Services
                 //Генерируем данные
                 for (ushort j = 0; j < fields.Length; j++)
                 {
-                    string rawData = GenerateDataString(fields[j].OutputValueType!, fields[j].IsNullable ? fields[j].Blank : 0, i);
+                    string rawData = GenerateDataString(fields[j].OutputValueType!, new() { Index = i, Iteration = j }, fields[j].IsNullable ? fields[j].Blank : 0);
 
                     if (rawData == "Undefined") continue;
 
@@ -159,7 +159,7 @@ namespace MockDataGenerator.Services
                     var row = new Dictionary<string, object?>();
                     foreach (Field field in fields)
                     {
-                        object? value = GenerateDataObject(field.OutputValueType!, field.Blank, i);
+                        object? value = GenerateDataObject(field.OutputValueType!, new() { Index = i }, field.Blank);
                         if (ReferenceEquals(value, Undefined.Value))
                             continue;
                         row.Add(field.Name!, value);
@@ -177,7 +177,7 @@ namespace MockDataGenerator.Services
                     var row = new Dictionary<string, object?>();
                     foreach (Field field in fields)
                     {
-                        object? value = GenerateDataObject(field.OutputValueType!, field.Blank, i);
+                        object? value = GenerateDataObject(field.OutputValueType!, new() { Index = i }, field.Blank);
                         if (ReferenceEquals(value, Undefined.Value))
                             continue;
                         row.Add(field.Name!, value);
@@ -266,7 +266,7 @@ namespace MockDataGenerator.Services
             await writer.WriteAsync($") VALUES (");
         }
 
-        private static string GenerateDataString(OutputValueType type, int BlankChance, ushort counter)
+        private static string GenerateDataString(OutputValueType type, FormulaEnviroment env, int BlankChance)
         {
             string value;
             if (BlankChance > 0)
@@ -305,7 +305,7 @@ namespace MockDataGenerator.Services
                     case GenerationTypes.Increment:
                         int StartVal = Convert.ToInt32(type.Data.GetValueOrDefault("Start"));
                         int Step = Convert.ToInt32(type.Data.GetValueOrDefault("Step"));
-                        value = (StartVal + (counter * Step)).ToString();
+                        value = (StartVal + (env.Index * Step)).ToString();
                         break;
                     case GenerationTypes.Boolean:
                         bool data = Random.Shared.Next(2) == 0;
@@ -314,7 +314,7 @@ namespace MockDataGenerator.Services
                     case GenerationTypes.Formula:
                         //Добавить проверку на ValueTypes 
                         //Парсинг строки кода JS из Data["Formula"]
-                        value = type.GetFormulaOutput();
+                        value = type.GetFormulaOutput(env);
                         break;
                     case GenerationTypes.None:
                         value = "Undefined";
@@ -333,7 +333,7 @@ namespace MockDataGenerator.Services
             return value;
         }
 
-        private static object? GenerateDataObject(OutputValueType type, int BlankChance, ushort counter)
+        private static object? GenerateDataObject(OutputValueType type, FormulaEnviroment env, int BlankChance)
         {
             object? value;
             if (BlankChance > 0)
@@ -370,7 +370,7 @@ namespace MockDataGenerator.Services
                     case GenerationTypes.Increment:
                         int StartVal = Convert.ToInt32(type.Data.GetValueOrDefault("Start"));
                         int Step = Convert.ToInt32(type.Data.GetValueOrDefault("Step"));
-                        value = (StartVal + (counter * Step));
+                        value = (StartVal + (env.Index * Step));
                         break;
                     case GenerationTypes.Boolean:
                         bool data = Random.Shared.Next(2) == 0;
@@ -379,7 +379,7 @@ namespace MockDataGenerator.Services
                     case GenerationTypes.Formula:
                         //Добавить проверку на ValueTypes 
                         //Парсинг строки кода JS из Data["Formula"]
-                        value = type.GetFormulaOutput();
+                        value = type.GetFormulaOutput(env);
                         break;
                     case GenerationTypes.None:
                         value = Undefined.Value;
