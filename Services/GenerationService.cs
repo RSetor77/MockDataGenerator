@@ -111,7 +111,17 @@ namespace MockDataGenerator.Services
             {
                 var values = fields
                     .Where(f => line.ContainsKey(f.Name!))
-                    .Select(f => line[f.Name!]?.ToString() ?? "");
+                    .Select(f =>
+                    {
+                        var rawValue = line[f.Name!];
+
+                        if (f.OutputValueType!.Type == ValueTypes.QuotedCustom ||
+                            f.OutputValueType.Type == ValueTypes.String)
+                            rawValue = $"\"{rawValue?.ToString()?.Replace("\"", "\"\"")}\"";
+                        
+
+                        return rawValue?.ToString() ?? "";
+                    });
 
                 //Оформить нужные поля
 
@@ -232,6 +242,8 @@ namespace MockDataGenerator.Services
         {
             for(ushort i=0; i < fields.Length; i++)
             {
+                if (fields[i].OutputValueType!.GenerationType == GenerationTypes.None)
+                    continue;
                 string fieldName = fields[i].Name!;
                 if ((i + 1) < fields.Length)
                     fieldName += separator;
