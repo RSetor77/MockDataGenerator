@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MockDataGenerator.Interfaces
+﻿namespace MockDataGenerator.Interfaces
 {
-    public class IFormatSettings
+    public interface IFormatSettings
     {
     }
 }

@@ -1,12 +1,8 @@
 ﻿using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
 using MockDataGenerator.Models;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MockDataGenerator.ViewModels
 {

@@ -4,12 +4,7 @@ using MockDataGenerator.Interfaces;
 using MockDataGenerator.Services;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace MockDataGenerator.Models
 {
