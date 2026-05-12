@@ -1,6 +1,8 @@
 ﻿using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using Jint;
 using MockDataGenerator.Models;
+using SkiaSharp;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -59,18 +61,14 @@ namespace MockDataGenerator.Services
             TXTSettings settings = (TXTSettings)options.FormatSettings;
             await using var writer = new StreamWriter(stream, settings.Encoding);
 
-            for (ushort i = 0; i < options.RecordsCount; i++)
+            List<Dictionary<string, object?>> data = GenerateData(fields, options);
+            foreach(var line in data)
             {
-                //Генерируем данные
-                for (ushort j = 0; j < fields.Length; j++)
-                {
-                    string rawData = GenerateDataString(fields[j].OutputValueType!, new() { Index = i, Iteration = j }, fields[j].Blank);
-                    if (rawData == "Undefined") continue;
-                    await writer.WriteAsync(rawData);
-                    if (j + 1 < fields.Length)
-                        await writer.WriteAsync(settings.Separator);
-                }
-                await writer.WriteLineAsync(string.Empty);
+                var values = fields
+                    .Where(f => line.ContainsKey(f.Name!))
+                    .Select(f => line[f.Name!]?.ToString() ?? "");
+
+                await writer.WriteLineAsync(string.Join(settings.Separator, values));
             }
         }
 
@@ -81,31 +79,43 @@ namespace MockDataGenerator.Services
 
             if (settings.CreateHeader) await WriteHeader(writer, fields, settings.Separator);
 
-            for (ushort i = 0; i < options.RecordsCount; i++)
+            //for (ushort i = 0; i < options.RecordsCount; i++)
+            //{
+            //    //Генерируем данные
+            //    for (ushort j = 0; j < fields.Length; j++)
+            //    {
+            //        string rawData = GenerateDataString(fields[j].OutputValueType!, new() { Index = i, Iteration = j }, fields[j].Blank);
+
+            //        if (rawData == "Undefined") continue;
+
+            //        if (!rawData.Equals("Null", StringComparison.InvariantCultureIgnoreCase))
+            //        {
+            //            if (fields[j].OutputValueType!.Type == ValueTypes.String || fields[j].OutputValueType!.Type == ValueTypes.QuotedCustom)
+            //            {
+            //                string formattedData = $"\"{rawData.Replace("\"", "\"\"")}\"";
+
+            //                await writer.WriteAsync(formattedData);
+            //            }
+            //            else await writer.WriteAsync(rawData);
+
+            //        }
+
+            //        if (j + 1 < fields.Length)
+            //            await writer.WriteAsync(settings.Separator);
+            //    }
+            //    await writer.WriteLineAsync(string.Empty);
+            //}
+
+            List<Dictionary<string, object?>> data = GenerateData(fields, options);
+            foreach (var line in data)
             {
-                //Генерируем данные
-                for (ushort j = 0; j < fields.Length; j++)
-                {
-                    string rawData = GenerateDataString(fields[j].OutputValueType!, new() { Index = i, Iteration = j }, fields[j].Blank);
+                var values = fields
+                    .Where(f => line.ContainsKey(f.Name!))
+                    .Select(f => line[f.Name!]?.ToString() ?? "");
 
-                    if (rawData == "Undefined") continue;
+                //Оформить нужные поля
 
-                    if (!rawData.Equals("Null", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        if (fields[j].OutputValueType!.Type == ValueTypes.String || fields[j].OutputValueType!.Type == ValueTypes.QuotedCustom)
-                        {
-                            string formattedData = $"\"{rawData.Replace("\"", "\"\"")}\"";
-
-                            await writer.WriteAsync(formattedData);
-                        }
-                        else await writer.WriteAsync(rawData);
-                        
-                    }
-
-                    if (j + 1 < fields.Length)
-                        await writer.WriteAsync(settings.Separator);
-                }
-                await writer.WriteLineAsync(string.Empty);
+                await writer.WriteLineAsync(string.Join(settings.Separator, values));
             }
         }
 
@@ -146,6 +156,35 @@ namespace MockDataGenerator.Services
                 if (i < options.RecordsCount - 1) await writer.WriteLineAsync(settings.DBMS!.CompactInsert ? ")," : ");");
                 else await writer.WriteLineAsync(");");
             }
+        }
+
+        private static List<Dictionary<string, object?>> GenerateData(Field[] fields, GenerationOptions options)
+        {
+            List<Dictionary<string, object?>> result = new(options.RecordsCount);
+            for (ushort i = 0; i < options.RecordsCount; i++)
+            {
+                Dictionary<string, object?> row = new(fields.Length);
+
+                for(short j=0;j<fields.Length;j++)
+                {
+                    FormulaEnviroment env = new()
+                    {
+                        Index = i,
+                        Iteration = j,
+                        Rows = row
+                    };
+
+                    object? value = GenerateDataObject(fields[j].OutputValueType!, env, fields[j].Blank);
+                    if (ReferenceEquals(value, Undefined.Value))
+                        continue;
+
+                    row.Add(fields[j].Name!, value);
+                }
+
+                result.Add(row);
+            }
+
+            return result;
         }
 
         public static async Task GenerateJSON(Stream stream, Field[] fields, GenerationOptions options)
