@@ -129,13 +129,13 @@ namespace MockDataGenerator.Services
             SQLSettings settings = (SQLSettings)options.FormatSettings;
             await using var writer = new StreamWriter(stream, settings.Encoding);
 
-            if (settings.CreateTable) await AddCreateTableQuery(writer, fields, settings.DBMS!, settings.TableName!);
+            if (settings.CreateTable) await AddCreateTableQuery(writer, fields, settings.DBMS, settings.TableName!);
 
-            if (settings.DBMS!.CompactInsert) await AddInsertValuesQueryHeader(writer, fields, settings.DBMS!, settings.TableName!);
+            if (settings.DBMS.CompactInsert) await AddInsertValuesQueryHeader(writer, fields, settings.DBMS, settings.TableName!);
 
             for (ushort i = 0; i < options.RecordsCount; i++)
             {
-                if (!settings.DBMS!.CompactInsert) await AddInsertValuesQueryStart(writer, fields, settings.DBMS!, settings.TableName!);
+                if (!settings.DBMS.CompactInsert) await AddInsertValuesQueryStart(writer, fields, settings.DBMS, settings.TableName!);
                 else await writer.WriteAsync("(");
 
                 //Генерируем данные
@@ -147,7 +147,7 @@ namespace MockDataGenerator.Services
 
                     if ((fields[j].OutputValueType!.Type == ValueTypes.String || fields[j].OutputValueType!.Type == ValueTypes.QuotedCustom) && !rawData.Equals("NULL", StringComparison.OrdinalIgnoreCase))
                     {
-                        char quote = settings.DBMS!.StringChar;
+                        char quote = settings.DBMS.StringChar;
                         string formattedData = $"{quote}{rawData.Replace(quote.ToString(), new string(quote, 2))}{quote}";
 
                         await writer.WriteAsync(formattedData);
@@ -158,7 +158,7 @@ namespace MockDataGenerator.Services
                     if (j + 1 < fields.Length) await writer.WriteAsync(',');
                 }
 
-                if (i < options.RecordsCount - 1) await writer.WriteLineAsync(settings.DBMS!.CompactInsert ? ")," : ");");
+                if (i < options.RecordsCount - 1) await writer.WriteLineAsync(settings.DBMS.CompactInsert ? ")," : ");");
                 else await writer.WriteLineAsync(");");
             }
         }
@@ -195,42 +195,18 @@ namespace MockDataGenerator.Services
         public static async Task GenerateJSON(Stream stream, Field[] fields, GenerationOptions options)
         {
             JsonSettings settings = (JsonSettings)options.FormatSettings;
+            List<Dictionary<string, object?>> rawData = GenerateData(fields, options);
+            byte[] newLineBytes = Encoding.UTF8.GetBytes("\n"); //Заменить на настраиваемые отступы
             if(settings.JsonLines)
             {
-                byte[] newLineBytes = Encoding.UTF8.GetBytes("\n");
-                for (ushort i = 0; i < options.RecordsCount; i++)
+                foreach(var row in rawData)
                 {
-                    var row = new Dictionary<string, object?>();
-                    foreach (Field field in fields)
-                    {
-                        object? value = GenerateDataObject(field.OutputValueType!, new() { Index = i }, field.Blank);
-                        if (ReferenceEquals(value, Undefined.Value))
-                            continue;
-                        row.Add(field.Name!, value);
-                    }
-
                     await JsonSerializer.SerializeAsync(stream, row, jsonLinesOptions);
                     await stream.WriteAsync(newLineBytes);
                 }
             }
             else
-            {
-                var objects = new List<Dictionary<string, object?>>(options.RecordsCount);
-                for (ushort i = 0; i < options.RecordsCount; i++)
-                {
-                    var row = new Dictionary<string, object?>();
-                    foreach (Field field in fields)
-                    {
-                        object? value = GenerateDataObject(field.OutputValueType!, new() { Index = i }, field.Blank);
-                        if (ReferenceEquals(value, Undefined.Value))
-                            continue;
-                        row.Add(field.Name!, value);
-                    }
-                    objects.Add(row);
-                }
-                await JsonSerializer.SerializeAsync(stream, objects, jsonOptions);
-            }
-            
+                await JsonSerializer.SerializeAsync(stream, rawData, jsonOptions);
         }
 
         private static async Task WriteHeader(StreamWriter writer, Field[] fields, char separator)
