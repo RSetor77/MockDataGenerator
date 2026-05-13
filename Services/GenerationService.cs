@@ -172,7 +172,7 @@ namespace MockDataGenerator.Services
 
                 for(short j=0;j<fields.Length;j++)
                 {
-                    FormulaEnviroment env = new()
+                    FormulaEnvironment env = new()
                     {
                         Index = i,
                         Iteration = j,
@@ -312,7 +312,7 @@ namespace MockDataGenerator.Services
             await writer.WriteAsync($") VALUES (");
         }
 
-        private static string GenerateDataString(OutputValueType type, FormulaEnviroment env, int BlankChance)
+        private static string GenerateDataString(OutputValueType type, FormulaEnvironment env, int BlankChance)
         {
             string value;
             if (BlankChance > 0)
@@ -379,7 +379,7 @@ namespace MockDataGenerator.Services
             return value;
         }
 
-        private static object? GenerateDataObject(OutputValueType type, FormulaEnviroment env, int BlankChance)
+        private static object? GenerateDataObject(OutputValueType type, FormulaEnvironment env, int BlankChance)
         {
             object? value;
             if (BlankChance > 0)

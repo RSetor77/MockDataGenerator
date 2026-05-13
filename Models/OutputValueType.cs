@@ -56,7 +56,7 @@ namespace MockDataGenerator.Models
 
             }
         }
-        public string GetFormulaOutput(FormulaEnviroment? env)
+        public string GetFormulaOutput(FormulaEnvironment? env)
         {
             if (GenerationType == GenerationTypes.Formula && _compiledFormula != null)
             {

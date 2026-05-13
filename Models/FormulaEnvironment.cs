@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace MockDataGenerator.Models
 {
-    public struct FormulaEnviroment
+    public struct FormulaEnvironment
     {
         public int Index { get; set; }
         public int? Iteration { get; set; }
