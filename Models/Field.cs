@@ -27,6 +27,10 @@ namespace MockDataGenerator.Models
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsNullable))]
         private bool _isNotNull = false;
+
+        [ObservableProperty]
+        private bool _showOutput = true;
+
         public string Check { get; set; } = "";
 
         public bool IsValid 

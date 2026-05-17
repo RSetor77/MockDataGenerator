@@ -1,4 +1,5 @@
-﻿using Avalonia.Platform.Storage;
+﻿using Avalonia.Controls.Shapes;
+using Avalonia.Platform.Storage;
 using MockDataGenerator.Models;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,8 @@ namespace MockDataGenerator.Services
             WriteIndented = false,
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
+
+        private static readonly Func<Field, bool> ShouldDisplayField = f => f.OutputValueType?.GenerationType != GenerationTypes.None && f.ShowOutput;
 
         public static async Task GenerateFile(Field[] fields, IStorageFile file, GenerationOptions options)
         {
@@ -60,8 +63,10 @@ namespace MockDataGenerator.Services
             foreach(var line in data)
             {
                 var values = fields
-                    .Where(f => line.ContainsKey(f.Name!))
-                    .Select(f => line[f.Name!]?.ToString() ?? "");
+                    .Select(f => {
+                        line.TryGetValue(f.Name!, out var rawValue);
+                        return rawValue?.ToString() ?? "";
+                    });
 
                 await writer.WriteLineAsync(string.Join(settings.Separator, values));
             }
@@ -74,46 +79,17 @@ namespace MockDataGenerator.Services
 
             if (settings.CreateHeader) await WriteHeader(writer, fields, settings.Separator);
 
-            //for (ushort i = 0; i < options.RecordsCount; i++)
-            //{
-            //    //Генерируем данные
-            //    for (ushort j = 0; j < fields.Length; j++)
-            //    {
-            //        string rawData = GenerateDataString(fields[j].OutputValueType!, new() { Index = i, Iteration = j }, fields[j].Blank);
-
-            //        if (rawData == "Undefined") continue;
-
-            //        if (!rawData.Equals("Null", StringComparison.InvariantCultureIgnoreCase))
-            //        {
-            //            if (fields[j].OutputValueType!.Type == ValueTypes.String || fields[j].OutputValueType!.Type == ValueTypes.QuotedCustom)
-            //            {
-            //                string formattedData = $"\"{rawData.Replace("\"", "\"\"")}\"";
-
-            //                await writer.WriteAsync(formattedData);
-            //            }
-            //            else await writer.WriteAsync(rawData);
-
-            //        }
-
-            //        if (j + 1 < fields.Length)
-            //            await writer.WriteAsync(settings.Separator);
-            //    }
-            //    await writer.WriteLineAsync(string.Empty);
-            //}
-
             List<Dictionary<string, object?>> data = GenerateData(fields, options);
             foreach (var line in data)
             {
                 var values = fields
-                    .Where(f => line.ContainsKey(f.Name!))
                     .Select(f =>
                     {
-                        var rawValue = line[f.Name!];
+                        line.TryGetValue(f.Name!, out var rawValue);
 
                         if (f.OutputValueType!.Type == ValueTypes.QuotedCustom ||
                             f.OutputValueType.Type == ValueTypes.String)
                             rawValue = $"\"{rawValue?.ToString()?.Replace("\"", "\"\"")}\"";
-                        
 
                         return rawValue?.ToString() ?? "";
                     });
@@ -186,7 +162,11 @@ namespace MockDataGenerator.Services
                     row.Add(fields[j].Name!, value);
                 }
 
-                result.Add(row);
+                var cleanRow = fields
+                    .Where(f => ShouldDisplayField(f) && row.ContainsKey(f.Name!))
+                    .ToDictionary(f => f.Name!, f => row[f.Name!]);
+
+                result.Add(cleanRow);
             }
 
             return result;
@@ -195,18 +175,14 @@ namespace MockDataGenerator.Services
         public static async Task GenerateJSON(Stream stream, Field[] fields, GenerationOptions options)
         {
             JsonSettings settings = (JsonSettings)options.FormatSettings;
+            await using var writer = new StreamWriter(stream);
             List<Dictionary<string, object?>> rawData = GenerateData(fields, options);
-            byte[] newLineBytes = Encoding.UTF8.GetBytes("\n"); //Заменить на настраиваемые отступы
-            if(settings.JsonLines)
-            {
-                foreach(var row in rawData)
-                {
-                    await JsonSerializer.SerializeAsync(stream, row, jsonLinesOptions);
-                    await stream.WriteAsync(newLineBytes);
-                }
-            }
+            string json = string.Empty;
+            if(settings.JsonLines) 
+                foreach(var row in rawData) json = JsonSerializer.Serialize(row, jsonLinesOptions);
             else
-                await JsonSerializer.SerializeAsync(stream, rawData, jsonOptions);
+                json = JsonSerializer.Serialize(rawData, jsonOptions);
+            await writer.WriteLineAsync(json);
         }
 
         private static async Task WriteHeader(StreamWriter writer, Field[] fields, char separator)

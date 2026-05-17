@@ -52,10 +52,11 @@
                      Padding="0">
 				<ListBox.ItemTemplate>
 					<DataTemplate DataType="models:Field">
-                        <Grid ColumnDefinitions="Auto, 1.5*, *, 120, Auto, Auto">
+                        <Grid ColumnDefinitions="Auto, Auto, 1.5*, *, 120, Auto, Auto">
 						    <!--Button Content="↑"/>
                             <Button Content="↓" Grid.Column="1"/-->
-                            <Grid RowDefinitions="*, *">
+                            <CheckBox IsChecked="{Binding ShowOutput}" />
+                            <Grid RowDefinitions="*, *" Grid.Column="1">
                                 <Button Grid.Row="0" Content="↑" 
                                         Padding="2,0" MinHeight="0"
                                         HorizontalAlignment="Stretch" 
@@ -72,11 +73,11 @@
 							<TextBox Watermark="Введите название..."
                                      VerticalContentAlignment="Center"
                                      Text="{Binding Name}"
-                                     Grid.Column="1"/> <!--Привязать сюда имя предмета--> 
+                                     Grid.Column="2"/> <!--Привязать сюда имя предмета--> 
                             <TextBox Watermark="Выберите тип..." 
                                      IsReadOnly="True"
                                      VerticalContentAlignment="Center"
-                                     Grid.Column="2"
+                                     Grid.Column="3"
                                      Text="{Binding OutputValueType.DisplayName}"> <!--Привязать сюда тип предмета-->
 								<TextBox.InnerRightContent>
                                     <Grid ColumnDefinitions="Auto, Auto">
@@ -99,15 +100,15 @@
                             <NumericUpDown Watermark="% пустых" 
                                            Minimum="0" Maximum="100"
                                            Increment="1"
-                                           Grid.Column="3"
+                                           Grid.Column="4"
                                            Value="{Binding Blank}"
                                            IsEnabled="{Binding IsNullable}"/>
                             <Button Content="x"
-                                    Grid.Column="4"
+                                    Grid.Column="5"
                                     Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).RemoveFieldCommand}"
                                     CommandParameter="{Binding}"/>
                             <Button Content="..."
-                                    Grid.Column="5"
+                                    Grid.Column="6"
                                     Command="{Binding UseOptionsCommand}"
                                     IsVisible="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).IsSQLSelected}"/>
                         </Grid>
